@@ -20,11 +20,10 @@ ss <- sparkR.session(
         spark.executor.instances = "2")
 )
 
-source("dataPre/dataPre.R")
+source("dataPre/PhDataPre.R")
 source("dataAdding/PhDataAddingJ.R")
 
-# 0. 数据准备
-# cal_excel_data_to_parquet("/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/2019年Universe更新维护1.0_190403.xlsx", "Universe2019")
+# cal_J_data_pre()
 
 # 1. 首次补数
 # 1.1 TODO:
