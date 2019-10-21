@@ -14,7 +14,7 @@ Sys.setenv(YARN_CONF_DIR="/Users/alfredyang/Desktop/hadoop-3.0.3/etc/hadoop/")
 ss <- sparkR.session(
     appName = "Max Cal",
     sparkConfig = list(
-        spark.driver.memory = "5g",
+        spark.driver.memory = "1g",
         spark.executor.memory = "2g",
         spark.executor.cores = "2",
         spark.executor.instances = "2")
