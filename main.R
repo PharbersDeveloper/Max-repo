@@ -25,8 +25,8 @@ source("dataAdding/PhDataAddingJ.R")
 
 # cal_J_data_pre()
 
-# 1. 首次补数
-# 1.1 TODO:
+# 1. 补数
 cal_data_adding_for_J("hdfs://192.168.100.137:9000//Map-repo/2019年Universe更新维护1.0_190403/Universe2019")
 
-# 2. 
+# 2. Panel
+#cal_max_data_panel()
