@@ -1,15 +1,15 @@
 # Max-repo
-
 print("start max job")
-library(SparkR)
-library(uuid)
-library(BPRSparkCalCommon)
-library(RKafkaProxy)
+#library(SparkR)
+library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+#library(uuid)
+#library(BPRSparkCalCommon)
+#library(RKafkaProxy)
 
 cmd_args = commandArgs(T)
 
-Sys.setenv(SPARK_HOME="/Users/alfredyang/Desktop/spark/spark-2.3.0-bin-hadoop2.7")
-Sys.setenv(YARN_CONF_DIR="/Users/alfredyang/Desktop/hadoop-3.0.3/etc/hadoop/")
+Sys.setenv(SPARK_HOME="D:/tools/spark-2.3.0-bin-hadoop2.7")
+Sys.setenv(YARN_CONF_DIR="D:/tools/hadoop-3.0.3/etc/hadoop/")
 
 ss <- sparkR.session(
     appName = "Max Cal",
@@ -20,13 +20,39 @@ ss <- sparkR.session(
         spark.executor.instances = "2")
 )
 
-source("dataPre/PhDataPre.R")
-source("dataAdding/PhDataAddingJ.R")
+#source("dataPre/PhDataPre.R")
+source("dataAdding/PhDataAddingJ.R",encoding = 'UTF-8')
+source("dataAdding/PhCpaPhaMapping.R",encoding = 'UTF-8')
+source("dataAdding/PhReadRawData.R",encoding = 'UTF-8')
 
 # cal_J_data_pre()
 
-# 1. 补数
-cal_data_adding_for_J("hdfs://192.168.100.137:9000//Map-repo/2019年Universe更新维护1.0_190403/Universe2019")
+# 1. 首次补数
+# 1.1 读取新版PHA与城市、城市等级、老版PHA的匹配表:
+map <- cal_data_adding_for_J(
+    "\\Map-repo\\2019年Universe更新维护1.0_190403\\Universe2019"
+    )
 
-# 2. Panel
-#cal_max_data_panel()
+id_city <- map[[1]]
+pha_id_transfer <- map[[2]]
+
+# 1.2 读取CPA与PHA的匹配关系:
+map_cpa_pha <- map_cpa_pha(
+    "\\Map-repo\\2019年Universe更新维护1.0_190403\\Mapping",
+    "\\Map-repo\\CPA_VS_GYC_VS_PHA_VS_HH_0418",
+    pha_id_transfer
+)
+
+
+
+# 1.3 读取原始样本数据:
+raw_data <- read_raw_data("\\Map-repo\\190814泰德-1701-1906检索\\1701-1906",
+                          map_cpa_pha)
+
+# 1.4 计算样本医院连续性
+
+
+
+# 2. 
+
+
