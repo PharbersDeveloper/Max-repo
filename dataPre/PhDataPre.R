@@ -32,4 +32,16 @@ cal_J_data_pre <- function() {
         "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/universe.xlsx",
         "Sheet1", 
         "hdfs://192.168.100.137:9000//Map-repo/universe")
+    
+    # 0.5 通用名企业层面集中度_pb.xlsx # Sheet 1
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/通用名企业层面集中度_pb.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/通用名企业层面集中度_pb")
+    
+    # 0.6 泰德产品匹配表.xlsx # Sheet 1
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/泰德产品匹配表.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/泰德产品匹配表")
 }
