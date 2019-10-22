@@ -12,5 +12,4 @@ read_raw_data <- function(raw_data_path, map_cpa_pha){
     raw_data <- rename(raw_data, Year=raw_data$年, Month = raw_data$月,
                        Sales=raw_data$金额, Units=raw_data$数量)
     return(raw_data)
-    
 }
