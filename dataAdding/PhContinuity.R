@@ -1,14 +1,4 @@
 
-con.count.all1<-con.count.all[,1:3]%>%unique()%>%
-    spread(年,n,fill=0)%>%
-    mutate(`总出现次数`=`2017`+`2018`+`2019`)%>%
-    mutate(min=pmin(`2017`,`2018`,`2019`),
-           max=pmax(`2017`,`2018`,`2019`))
-write.xlsx(con.count.all1,
-           'E:/MAX/Tide/Global/Tide项目医院连续性表现_医院层面.xlsx')
-write.xlsx(con.count.all,
-           'E:/MAX/Tide/Global/医院两年半连续性表现.xlsx')
-
 cal_continuity <- function(raw_data){
     
     con <- distinct(select(raw_data,'Year','Month','新版ID'))
@@ -33,11 +23,32 @@ cal_continuity <- function(raw_data){
                                    'MAX','MIN'))
     
     con <- distinct(
-        select(con, "新版ID","Year","count")
+        select(con, "新版ID", "Year", "count")
+    )
+ 
+    con <- repartition(con, 2L, con$新版ID)
+    
+    printSchema(con)
+    con_schema <- structType(
+        structField("新版ID", "string"),
+        structField("Year_2017", "double"),
+        structField("Year_2018", "double"),
+        structField("Year_2019", "double"),
+        structField("Count", "double")
     )
     
+    con <- 
+        dapply(con,
+            function(x) {
+                library("tidyverse")
+                x <- unique(x)
+                x <- spread(x, "Year", "count", fill = 0)
+                return(x)
+                
+            }, con_schema
+        )
     
-    con <- partitionBy(con, con$Year)
+    print(head(con))
     
     return(raw_data)
     
