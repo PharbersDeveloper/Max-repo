@@ -29,12 +29,12 @@ source("dataAdding/PhReadRawData.R",encoding = 'UTF-8')
 
 # 1. 首次补数
 # 1.1 读取新版PHA与城市、城市等级、老版PHA的匹配表:
-map <- cal_data_adding_for_J(
+map_city_id <- cal_data_adding_for_J(
     "\\Map-repo\\2019年Universe更新维护1.0_190403\\Universe2019"
     )
 
-id_city <- map[[1]]
-pha_id_transfer <- map[[2]]
+id_city <- map_city_id[[1]]
+pha_id_transfer <- map_city_id[[2]]
 
 # 1.2 读取CPA与PHA的匹配关系:
 map_cpa_pha <- map_cpa_pha(
@@ -50,6 +50,7 @@ raw_data <- read_raw_data("\\Map-repo\\190814泰德-1701-1906检索\\1701-1906",
                           map_cpa_pha)
 
 # 1.4 计算样本医院连续性
+
 
 
 
