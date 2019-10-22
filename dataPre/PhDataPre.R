@@ -44,4 +44,10 @@ cal_J_data_pre <- function() {
         "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/泰德产品匹配表.xlsx",
         "Sheet 1", 
         "hdfs://192.168.100.137:9000//Map-repo/泰德产品匹配表")
+    
+    # 0.6 company-global # Sheet 1
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/company-global.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/company-global")
 }
