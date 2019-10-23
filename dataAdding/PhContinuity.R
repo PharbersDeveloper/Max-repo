@@ -9,7 +9,8 @@ cal_continuity <- function(raw_data){
                          MAX=max(con$count),
                          MIN=min(con$count))
     
-    con_dis <- join(con, con_whole_year, con$新版ID==con_whole_year$新版ID, 'left')
+    con_dis <- join(con, con_whole_year, 
+                    con$新版ID==con_whole_year$新版ID, 'left')
     
     colnames(con_dis)[which(names(con_dis) %in% c('新版ID'))[-1]] <- 'tmp'
     
@@ -19,8 +20,11 @@ cal_continuity <- function(raw_data){
         MIN = ifelse(isNull(con_dis$MIN), 0, con_dis$MIN)
     )
     
-    distribution <- count(group_by(distinct(select(con_dis,'MAX','MIN','新版ID')),
-                                   'MAX','MIN'))
+    distribution <-
+        count(group_by(distinct(select(
+            con_dis, 'MAX', 'MIN', '新版ID'
+        )),
+        'MAX', 'MIN'))
     
  
     con <- repartition(con, 2L, con$新版ID)
@@ -58,7 +62,7 @@ cal_continuity <- function(raw_data){
     
     print(head(con))
     
-    return(raw_data)
+    return(list(con_dis,con))
     
 }
 

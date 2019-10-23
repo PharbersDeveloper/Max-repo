@@ -25,6 +25,8 @@ ss <- sparkR.session(
 source("dataAdding/PhDataAddingJ.R",encoding = 'UTF-8')
 source("dataAdding/PhCpaPhaMapping.R",encoding = 'UTF-8')
 source("dataAdding/PhReadRawData.R",encoding = 'UTF-8')
+source("dataAdding/PhContinuity.R",encoding = 'UTF-8')
+source("dataAdding/PhGrowth.R",encoding = 'UTF-8')
 
 # cal_J_data_pre()
 
@@ -51,9 +53,13 @@ raw_data <- read_raw_data("\\Map-repo\\190814泰德-1701-1906检索2\\1701-1906"
                           map_cpa_pha)
 
 # 1.4 计算样本医院连续性:
+con_all <- cal_continuity(raw_data)
+
+con <- con_all[[2]]
 
 
 # 1.5 计算样本分子增长率:
+gr <- cal_growth(raw_data, id_city)
 
 
 # 1.6 原始数据格式整理:
