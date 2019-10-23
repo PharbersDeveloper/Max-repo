@@ -58,8 +58,6 @@ cal_continuity <- function(raw_data){
                    min_max(con)[[2]]) %>% 
         drop(c('Count','新版ID'))
     
-    
-    
     print(head(con))
     
     return(list(con_dis,con))

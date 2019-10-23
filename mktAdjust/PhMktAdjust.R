@@ -75,5 +75,5 @@ cal_data_mkt_adjust <- function(raw_path, uni_2019_path, map_path, o_map_path, c
     # raw_pha3$sales_1_share<-raw_pha3$sales_1/raw_pha3$sales
     # raw_pha3$sales_2_share<-raw_pha3$sales_2/raw_pha3$sales
     # raw_pha3$sales_3_share<-raw_pha3$sales_3/raw_pha3$sales
-    
+
 }
