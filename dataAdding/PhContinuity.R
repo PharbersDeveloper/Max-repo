@@ -9,10 +9,11 @@ cal_continuity <- function(raw_data){
                          MAX=max(con$count),
                          MIN=min(con$count))
     
+    #drop_dup_cols()的定义在dataAdding/PhDropDupCols.R
     con_dis <- join(con, con_whole_year, 
-                    con$新版ID==con_whole_year$新版ID, 'left')
+                    con$新版ID==con_whole_year$新版ID, 'left') %>%
+        drop_dup_cols()
     
-    colnames(con_dis)[which(names(con_dis) %in% c('新版ID'))[-1]] <- 'tmp'
     
     con_dis <- mutate(
         con_dis, 
@@ -53,9 +54,11 @@ cal_continuity <- function(raw_data){
         mutate(total=con$Year_2017+con$Year_2018+con$Year_2019,
                PHA = con$新版ID, 
                min = 
-                   min_max(con)[[1]],
+                   min_max(con, 
+                           c('Year_2017','Year_2018','Year_2019'))[[1]],
                max = 
-                   min_max(con)[[2]]) %>% 
+                   min_max(con, 
+                           c('Year_2017','Year_2018','Year_2019'))[[2]]) %>% 
         drop(c('Count','新版ID'))
     
     print(head(con))
@@ -66,12 +69,13 @@ cal_continuity <- function(raw_data){
 
 
 
-min_max <- function(df){
-    min <- ifelse(df$Year_2017 > df$Year_2018, df$Year_2018, df$Year_2017)
-    min <- ifelse(min > df$Year_2019, df$Year_2019, min)
-    
-    max <- ifelse(df$Year_2017 < df$Year_2018, df$Year_2018, df$Year_2017)
-    max <- ifelse(max < df$Year_2019, df$Year_2019, max)
-   
-    return(list(min,max))
-}
+
+# min_max <- function(df){
+#     min <- ifelse(df$Year_2017 > df$Year_2018, df$Year_2018, df$Year_2017)
+#     min <- ifelse(min > df$Year_2019, df$Year_2019, min)
+#     
+#     max <- ifelse(df$Year_2017 < df$Year_2018, df$Year_2018, df$Year_2017)
+#     max <- ifelse(max < df$Year_2019, df$Year_2019, max)
+#    
+#     return(list(min,max))
+# }

@@ -1,8 +1,7 @@
 cal_growth <- function(raw_data, id_city){
     gr_raw_data <- join(raw_data, id_city,
-                        raw_data$新版ID == id_city$新版ID, 'left') 
-    colnames(gr_raw_data)[which(names(gr_raw_data) %in% c('新版ID'))[-1]] <- 
-        'tmp'
+                        raw_data$新版ID == id_city$新版ID, 'left') %>%
+        drop_dup_cols()
     
     
     gr_raw_data <- mutate(gr_raw_data, 
@@ -48,34 +47,28 @@ cal_growth <- function(raw_data, id_city){
     
     gr <- modify_gr(gr, names(gr)[startsWith(names(gr),'GR')])
     
-    # gr_with_id <- gr_raw_data %>%
-    #     select('新版ID', '医院编码', 'City', 'CITYGROUP', 'std_mole') %>%
-    #     distinct() %>%
-    #     join(gr,
-    #          gr_raw_data$CITYGROUP == gr$CITYGROUP &
-    #          gr_raw_data$std_mole == gr$std_mole, 'left')
+    gr_with_id <- gr_raw_data %>%
+        select('新版ID', '医院编码', 'City', 'CITYGROUP', 'std_mole') %>%
+        distinct() %>%
+        join(gr,
+             gr_raw_data$CITYGROUP == gr$CITYGROUP &
+             gr_raw_data$std_mole == gr$std_mole, 'left') %>%
+        drop_dup_cols()
     
-    print(head(gr, 100))
-    # print(head(arrange(gr,gr$GR1718)))
-    # print(head(arrange(gr,desc(gr$GR1718))))
-    # print(head(gr_with_id))
+    #print(head(gr, 100))
+    #print(head(gr_with_id))
     # TODO: 输出gr_with_id; 获取raw_pha_id
-    # return(list(gr, gr_with_id))
+    return(list(gr, gr_with_id))
 }
 
 modify_gr <- function(df,gr_cols){
     
-    cal_gr_tmp <- function(df) {
-        ifelse(isNull(df[[col]]) |
-                   (df[[col]] > 10) |
-                   (df[[col]] < 0.1),
-               1,
-               df[[col]])
-    }
-    
     for(col in gr_cols){
-        df <- mutate(df, tmp = cal_gr_tmp(df))
-        df <- df %>% withColumnRenamed('tmp', paste0(col, "_mut"))
+        df[[col]] <- ifelse(isNull(df[[col]]) |
+                                (df[[col]] > 10) |
+                                (df[[col]] < 0.1),
+                            1,
+                            df[[col]])
     }
     return(df)
 }

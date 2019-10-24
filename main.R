@@ -14,6 +14,7 @@ Sys.setenv(YARN_CONF_DIR="D:/tools/hadoop-3.0.3/etc/hadoop/")
 
 ss <- sparkR.session(
     appName = "Max Cal",
+    enableHiveSupport = F,
     sparkConfig = list(
         spark.driver.memory = "1g",
         spark.executor.memory = "2g",
@@ -27,6 +28,13 @@ source("dataAdding/PhCpaPhaMapping.R",encoding = 'UTF-8')
 source("dataAdding/PhReadRawData.R",encoding = 'UTF-8')
 source("dataAdding/PhContinuity.R",encoding = 'UTF-8')
 source("dataAdding/PhGrowth.R",encoding = 'UTF-8')
+source("dataAdding/PhCompareColumnsByRow.R",encoding = 'UTF-8')
+source("dataAdding/PhDropDupCols.R",encoding = 'UTF-8')
+source("dataAdding/PhRawDataTransformation.R",encoding = 'UTF-8')
+source("dataAdding/PhAddData.R",encoding = 'UTF-8')
+source("dataAdding/PhAddDataMultiplyGrowth.R",encoding = 'UTF-8')
+source("dataAdding/PhCombindData.R",encoding = 'UTF-8')
+source("dataAdding/PhAddDataNewHosp.R",encoding = 'UTF-8')
 
 # cal_J_data_pre()
 
@@ -59,29 +67,34 @@ con <- con_all[[2]]
 
 
 # 1.5 计算样本分子增长率:
-gr <- cal_growth(raw_data, id_city)
+gr_all <- cal_growth(raw_data, id_city)
+gr <- gr_all[[1]]
+gr_with_id <- gr_all[[2]]
 
 
 # 1.6 原始数据格式整理:
-
+seed <- trans_raw_data_for_adding(raw_data,id_city,gr_with_id)
 
 # 1.7 补充各个医院缺失的月份:
+adding_results <- add_data(seed)
 
+adding_data <- adding_results[[1]]
+original_range <- adding_results[[2]]
 
-# 1.8 检查补数部分的时间范围:
+# 1.8 合并补数部分和原始部分:
+raw_data_adding <- combind_data(raw_data, adding_data)
 
-
-# 1.9 合并补数部分和原始部分:
-
-
-# 1.10 进一步为最后一年独有的医院补最后一年的缺失月份
+# 1.9 进一步为最后一年独有的医院补最后一年的缺失月份
 #      （可能也要考虑第一年）:
 
+adding_data_new <- add_data_new_hosp(raw_data_adding, original_range)
 
-# 1.11 检查补数占比:
 
 
-# 1.12 输出补数结果:
+# 1.10 检查补数占比:
+
+
+# 1.11 输出补数结果:
 
 
 
