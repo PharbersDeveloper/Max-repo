@@ -3,7 +3,8 @@ get_seed_data <- function(seed, seed_range, y){
     
     seed_for_adding <- seed_for_adding %>%
         join(seed_range, seed_for_adding$Month==seed_range$Month &
-                 seed_for_adding$PHA==seed_range$PHA, 'inner') %>%
+                 seed_for_adding$PHA==seed_range$PHA &
+                 seed_for_adding$Year==seed_range$Year, 'inner') %>%
         drop_dup_cols()
     
     
@@ -35,7 +36,7 @@ cal_seed_with_gr <- function(df, y, years,all_gr_index){
     for(i in all_gr_index) {
         df[[i]] <- ifelse((df$min_index > i) |
                               (df$max_index < i), 1, df[[i]])
-        df[[i]] <- ifelse(df$Year < y, df[[i]] ^ (-1), df[[i]])
+        df[[i]] <- ifelse(df$Year > y, df[[i]] ^ (-1), df[[i]])
         df$Sales <- df$Sales * df[[i]]
         df$Units <- df$Units * df[[i]]
     }
