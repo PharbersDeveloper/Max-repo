@@ -2,8 +2,7 @@ get_seed_data <- function(seed, seed_range, y){
     seed_for_adding <- seed[!(seed$Year %in% y),]
     
     seed_for_adding <- seed_for_adding %>%
-        join(seed_range, seed_for_adding$Year==seed_range$Year & 
-                 seed_for_adding$Month==seed_range$Month &
+        join(seed_range, seed_for_adding$Month==seed_range$Month &
                  seed_for_adding$PHA==seed_range$PHA, 'inner') %>%
         drop_dup_cols()
     
