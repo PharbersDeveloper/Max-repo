@@ -87,15 +87,18 @@ raw_data_adding <- combind_data(raw_data, adding_data)
 # 1.9 进一步为最后一年独有的医院补最后一年的缺失月份
 #      （可能也要考虑第一年）:
 
-adding_data_new <- add_data_new_hosp(raw_data_adding, original_range)
-
+raw_data_adding <- add_data_new_hosp(raw_data_adding, original_range)
 
 
 # 1.10 检查补数占比:
 
+chk=agg(group_by(raw_data_adding, 
+                 'Year', 'add_flag'),
+        sales=sum(raw_data_adding$Sales))
+print(head(chk))
+
 
 # 1.11 输出补数结果:
-
 
 
 
