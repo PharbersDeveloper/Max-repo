@@ -36,6 +36,8 @@ source("dataAdding/PhAddDataMultiplyGrowth.R", encoding = "UTF-8")
 source("dataAdding/PhCombindData.R", encoding = "UTF-8")
 source("dataAdding/PhAddDataNewHosp.R", encoding = "UTF-8")
 
+source("panel/PhPanelGen.R", encoding = "UTF-8")
+
 # cal_J_data_pre()
 
 # 1. 首次补数
@@ -105,7 +107,7 @@ adding_data_new <- add_data_new_hosp(raw_data_adding_path, original_range)
 # 1.11 输出补数结果:
 # print(head(adding_data_new))
 # print(count(adding_data_new))
-
+write.parquet(adding_data_new, "\\Map-repo\\adding_data_result", mode = "overwrite")
 add_res <- read.df("\\Map-repo\\adding_data_result", "parquet")
 
 chk = agg(groupBy(
@@ -116,4 +118,13 @@ chk = agg(groupBy(
          )
 print(head(chk))
 
-# 2. 
+# 2. panel
+
+panel <-
+    cal_max_data_panel(
+        uni_2019_path = "\\Map-repo\\2019年Universe更新维护1.0_190403\\Universe2019",
+        mkt_path = "/Map-repo/通用名企业层面集中度_pb",
+        map_path = "/Map-repo/泰德产品匹配表",
+        c_month = "1906",
+        add_data = add_res
+    )
