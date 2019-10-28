@@ -1,14 +1,19 @@
 add_data <- function(seed) {
-    original_range <-
-        seed %>% select('Year', 'Month', 'PHA') %>% distinct()
-    
-    original_range_year <- distinct(original_range[, 'Year'])
-    years <- collect(original_range_year)
-    
-    years <- sort(years$Year)
+    # 1. 得到年
+    original_range <- distinct(select(seed, "Year", "Month", "PHA"))
+    ws <- windowOrderBy("Year")
+    years <- arrange(
+                        select(agg(groupBy(original_range, "Year"), tmp = lit(1)), "Year"),
+                        "Year"
+                    )
+    years <- as.data.frame(years)[,"Year"]
+    print(years)
     
     all_gr_index <- which(startsWith(names(seed),
-                                     paste0('GR')))
+                                      paste0('GR')))
+    print(all_gr_index)
+    
+    # 3. 每年的补数
     empty <- 0
     for (y in years) {
         seed_range <- cal_time_range(original_range, y)
@@ -28,7 +33,6 @@ add_data <- function(seed) {
     }
     
     return(list(adding_data, original_range))
-    
 }
 
 cal_time_diff <- function(df, y) {
