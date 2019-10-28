@@ -55,8 +55,12 @@ add_data_new_hosp <- function(raw_data_adding_path, original_range){
 
     adding_data_new <- 
         do.call(SparkR::group_by, function_params) %>%
-        SparkR::agg(Sales=sum(adding_data_new$Sales)/number_of_existing_months,
-            Units=sum(adding_data_new$Units)/number_of_existing_months)
+        SparkR::agg(Sales="sum",
+            Units="sum") 
+    
+    adding_data_new <- adding_data_new %>% 
+        mutate(Sales=adding_data_new$`sum(Sales)`/lit(number_of_existing_months),
+               Units=adding_data_new$`sum(Units)`/lit(number_of_existing_months))
     
     adding_data_new <- adding_data_new %>%
         crossJoin(missing_months)
