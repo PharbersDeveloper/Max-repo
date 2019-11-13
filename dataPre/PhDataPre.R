@@ -50,4 +50,35 @@ cal_J_data_pre <- function() {
         "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/company-global.xlsx",
         "Sheet 1", 
         "hdfs://192.168.100.137:9000//Map-repo/company-global")
+    
+    # 1.0 凯纷/000ref/universe.xlsx #
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/universe_kaifeng.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/universe_kaifeng")
+
+    # 1.1 凯纷_Panel_2018.xlsx #
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/凯纷_Panel_2018.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/凯纷_Panel_2018")
+
+    # 1.2 去重3.xlsx #     
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/去重3.xlsx",
+        "补充码小的替换100床位以下的", 
+        "hdfs://192.168.100.137:9000//Map-repo/去重3")
+
+    # 1.3 副本医院潜力+-+医院范围，重点科室+医生数_ljx.xlsx #     
+    cal_excel_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/副本医院潜力+-+医院范围，重点科室+医生数_ljx.xlsx",
+        "医生数", 
+        "hdfs://192.168.100.137:9000//Map-repo/副本医院潜力+-+医院范围，重点科室+医生数")
+ 
+    # 1.4 全盘数据复原 ind1 #
+    cal_excel_large_data_to_parquet(
+        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/ind1.xlsx",
+        "Sheet1",
+        "hdfs://192.168.100.137:9000//Map-repo/ind1")
+ 
 }

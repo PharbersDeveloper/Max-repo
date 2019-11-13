@@ -9,14 +9,14 @@ library(BPRSparkCalCommon)
 
 cmd_args = commandArgs(T)
 
-Sys.setenv(SPARK_HOME="D:\\tools\\spark-2.3.0-bin-hadoop2.7")
-Sys.setenv(YARN_CONF_DIR="D:\\tools\\hadoop-3.0.3\\etc\\hadoop")
+Sys.setenv(SPARK_HOME="/Users/alfredyang/Desktop/spark/spark-2.3.0-bin-hadoop2.7")
+Sys.setenv(YARN_CONF_DIR="/Users/alfredyang/Desktop/hadoop-3.0.3/etc/hadoop")
 
 ss <- sparkR.session(
     appName = "Max Cal",
     enableHiveSupport = F,
     sparkConfig = list(
-        spark.driver.memory = "4g",
+        spark.driver.memory = "2g",
         spark.executor.memory = "2g",
         spark.executor.cores = "2",
         spark.executor.instances = "3")

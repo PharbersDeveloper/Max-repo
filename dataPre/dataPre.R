@@ -1,4 +1,5 @@
 require(openxlsx)
+require(data.table)
 
 cal_excel_data_to_parquet <- function(path, tab, dest) {
     map <- read.xlsx(path, sheet = tab)
@@ -6,8 +7,7 @@ cal_excel_data_to_parquet <- function(path, tab, dest) {
     write.parquet(mapDf, dest)
 }
 
-cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L) {
-    map <- read.xlsx(path, sheet = tab)
+cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
     d <- dim(map)
     print(d)
     round <- d[1] / step
@@ -26,7 +26,17 @@ cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L) {
     print(step * floor(round) + 1)
     print(step * floor(round) + rleft)
     tmpDf2 <- createDataFrame(map[(step * floor(round) + 1) : (step * floor(round) + rleft), ])
-    print(count(tmpDf2))
+    print(SparkR::count(tmpDf2))
     write.parquet(tmpDf2, dest, mode = "append")
-    print("end")
+    print("end")   
+}
+
+cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L) {
+    map <- read.xlsx(path, sheet = tab)
+    cal_large_data_frame_2_spark(map, dest, step)
+}
+
+cal_csv_large_data_to_parquet <- function(path, dest, step = 10000L) {
+    map <- fread(path, stringsAsFactors = F)
+    cal_large_data_frame_2_spark(map, dest, step)
 }
