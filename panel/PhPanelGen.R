@@ -1,6 +1,5 @@
 
 library("BPRSparkCalCommon")
-
 cal_max_data_panel <- function(uni_2019_path, mkt_path, map_path, c_month, add_data) {
     uni <- read.df(uni_2019_path, "parquet")
     uni <- distinct(select(uni, "新版ID", "新版名称"))
@@ -42,8 +41,6 @@ cal_max_data_panel <- function(uni_2019_path, mkt_path, map_path, c_month, add_d
     if(nrow(need_cleaning)>0){
         write.df(need_cleaning, "/Max-repo/need_cleaning", "parquet", "overwrite")
     }
-    
-    
     ### Panel
     mp <- distinct(select(map, "min1", "min2"))
     panel <- join(add_data, mp, add_data$min1 == mp$min1, "left") %>%
