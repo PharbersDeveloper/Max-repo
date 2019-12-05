@@ -2,28 +2,30 @@
 print("start max job")
 library(SparkR)
 library(magrittr)
-#library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
-#library(uuid)
+# library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+# library(uuid)
 library(BPRSparkCalCommon)
-#library(RKafkaProxy)
+library(styler)
+# library(RKafkaProxy)
 
-cmd_args = commandArgs(T)
+cmd_args <- commandArgs(T)
 
-Sys.setenv(SPARK_HOME="/Users/alfredyang/Desktop/spark/spark-2.3.0-bin-hadoop2.7")
-Sys.setenv(YARN_CONF_DIR="/Users/alfredyang/Desktop/hadoop-3.0.3/etc/hadoop")
+Sys.setenv(SPARK_HOME = "D:/tools/spark-2.3.0-bin-hadoop2.7")
+Sys.setenv(YARN_CONF_DIR = "D:/tools/hadoop-2.7.3/etc/hadoop")
 
 ss <- sparkR.session(
-    appName = "Max Cal",
-    enableHiveSupport = F,
-    sparkConfig = list(
-        spark.driver.memory = "2g",
-        spark.executor.memory = "2g",
-        spark.executor.cores = "2",
-        spark.executor.instances = "3")
+  appName = "Max Cal",
+  enableHiveSupport = F,
+  sparkConfig = list(
+    spark.driver.memory = "2g",
+    spark.executor.memory = "1g",
+    spark.executor.cores = "2",
+    spark.executor.instances = "2"
+  )
 )
 
-#source("dataPre/PhDataPre.R")
-source("dataAdding/PhDataAddingJ.R", encoding = "UTF-8")
+# source("dataPre/PhDataPre.R")
+source("dataAdding/PhUniverseReading.R", encoding = "UTF-8")
 source("dataAdding/PhCpaPhaMapping.R", encoding = "UTF-8")
 source("dataAdding/PhReadRawData.R", encoding = "UTF-8")
 source("dataAdding/PhContinuity.R", encoding = "UTF-8")
@@ -38,29 +40,26 @@ source("dataAdding/PhAddDataNewHosp.R", encoding = "UTF-8")
 
 source("panel/PhPanelGen.R", encoding = "UTF-8")
 
-# cal_J_data_pre()
+
 
 # 1. 首次补数
-# 1.1 读取新版PHA与城市、城市等级、老版PHA的匹配表:
-map_city_id <- cal_data_adding_for_J(
-    "\\Map-repo\\2019年Universe更新维护1.0_190403\\Universe2019"
-    )
 
-id_city <- map_city_id[[1]]
-pha_id_transfer <- map_city_id[[2]]
+uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
+universe <- read_universe(uni_path)
+id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
-map_cpa_pha <- map_cpa_pha(
-    "\\Map-repo\\2019年Universe更新维护1.0_190403\\Mapping",
-    "\\Map-repo\\CPA_VS_GYC_VS_PHA_VS_HH_0418",
-    pha_id_transfer
+cpa_pha_mapping <- map_cpa_pha(
+  "/Map-repo/Janssen/MappingPha"
 )
 
 
 
 # 1.3 读取原始样本数据:
-raw_data <- read_raw_data("\\Map-repo\\190814泰德-1701-1906检索2\\1701-1906",
-                          map_cpa_pha)
+raw_data <- read_raw_data(
+  "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+  cpa_pha_mapping
+)
 persist(raw_data, "MEMORY_ONLY")
 
 # 1.4 计算样本医院连续性:
@@ -70,7 +69,7 @@ con <- con_all[[2]]
 
 
 # 1.5 计算样本分子增长率:
-gr_all <- cal_growth(raw_data, id_city)
+gr_all <- cal_growth(raw_data, id_city, max_month = 7)
 gr <- gr_all[[1]]
 gr_with_id <- gr_all[[2]]
 
@@ -90,14 +89,22 @@ persist(original_range, "MEMORY_ONLY")
 # 1.8 合并补数部分和原始部分:
 raw_data_adding <- combind_data(raw_data, adding_data)
 raw_data_adding <- repartition(raw_data_adding, 2L)
-write.parquet(raw_data_adding, "\\Map-repo\\raw_data_adding", mode = "overwrite")
+
+
+##好神奇，写出去再读进来，driver机就不会内存溢出了
+raw_data_adding_path <- "/Map-repo/Janssen/raw_data_adding"
+write.parquet(raw_data_adding, raw_data_adding_path, mode = "overwrite")
+raw_data_adding <- read.df(raw_data_adding_path, "parquet")
+
+
+
 unpersist(seed, blocking = FALSE)
 unpersist(raw_data, blocking = FALSE)
 
 # 1.9 进一步为最后一年独有的医院补最后一年的缺失月份
 #      （可能也要考虑第一年）:
 
-adding_data_new <- add_data_new_hosp(raw_data_adding_path, original_range)
+adding_data_new <- add_data_new_hosp(raw_data_adding, original_range)
 # persist(adding_data_new, "MEMORY_AND_DISK")
 # unpersist(original_range, blocking = FALSE)
 
@@ -107,24 +114,24 @@ adding_data_new <- add_data_new_hosp(raw_data_adding_path, original_range)
 # 1.11 输出补数结果:
 # print(head(adding_data_new))
 # print(count(adding_data_new))
-write.parquet(adding_data_new, "\\Map-repo\\adding_data_result", mode = "overwrite")
-add_res <- read.df("\\Map-repo\\adding_data_result", "parquet")
+#write.parquet(adding_data_new, "\\Map-repo\\adding_data_result", mode = "overwrite")
+#add_res <- read.df("\\Map-repo\\adding_data_result", "parquet")
 
-chk = agg(groupBy(
-                    add_res, 
-                    "Year", "add_flag"
-                 ),
-          Sales = "sum"
-         )
+chk <- agg(groupBy(
+  adding_data_new,
+  "Year", "add_flag"
+),
+Sales = "sum"
+)
 print(head(chk))
 
 # 2. panel
 
-panel <-
-    cal_max_data_panel(
-        uni_2019_path = "\\Map-repo\\2019年Universe更新维护1.0_190403\\Universe2019",
-        mkt_path = "/Map-repo/通用名企业层面集中度_pb",
-        map_path = "/Map-repo/泰德产品匹配表",
-        c_month = "1906",
-        add_data = add_res
-    )
+# panel <-
+#   cal_max_data_panel(
+#     uni_path,
+#     mkt_path = "/Map-repo/通用名企业层面集中度_pb",
+#     map_path = "/Map-repo/泰德产品匹配表",
+#     c_month = "1906",
+#     add_data = adding_data_new
+#   )

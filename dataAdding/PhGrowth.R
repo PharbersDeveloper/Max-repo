@@ -1,6 +1,14 @@
-cal_growth <- function(raw_data, id_city){
+cal_growth <- function(raw_data, id_city, max_month = 12){
+    
+    #TODO: 完整年用完整年增长，不完整年用不完整年增长
+    if(max_month < 12){
+        raw_data <- raw_data %>%
+            filter(raw_data$Month <= max_month)
+    }
+    
+    
     gr_raw_data <- join(raw_data, id_city,
-                        raw_data$新版ID == id_city$新版ID, 'left') %>%
+                        raw_data$PHA == id_city$PHA, 'left') %>%
         drop_dup_cols()
     
     
@@ -26,7 +34,6 @@ cal_growth <- function(raw_data, id_city){
     con_schema <- structType(
         structField("std_mole", "string"),
         structField("CITYGROUP", "string"),
-        structField("Year_2017", "double"),
         structField("Year_2018", "double"),
         structField("Year_2019", "double")
     )
@@ -42,13 +49,13 @@ cal_growth <- function(raw_data, id_city){
                }, con_schema
         )
     gr <- gr %>%
-        mutate(GR1718=gr$Year_2018/gr$Year_2017)
+        mutate(GR1819=gr$Year_2019/gr$Year_2018)
     
     
     gr <- modify_gr(gr, names(gr)[startsWith(names(gr),'GR')])
     
     gr_with_id <- gr_raw_data %>%
-        select('新版ID', '医院编码', 'City', 'CITYGROUP', 'std_mole') %>%
+        select('PHA', '医院编码', 'City', 'CITYGROUP', 'std_mole') %>%
         distinct() %>%
         join(gr,
              gr_raw_data$CITYGROUP == gr$CITYGROUP &

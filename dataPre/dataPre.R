@@ -1,8 +1,9 @@
-require(openxlsx)
+require(readxl)
 require(data.table)
 
-cal_excel_data_to_parquet <- function(path, tab, dest) {
-    map <- read.xlsx(path, sheet = tab)
+cal_excel_data_to_parquet <- function(path, tab, dest, start_row = 1) {
+    map <- read_excel(path, sheet = tab, skip = start_row - 1,
+                      .name_repair = "universal")
     mapDf <- createDataFrame(map)
     write.parquet(mapDf, dest)
 }
@@ -31,8 +32,10 @@ cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
     print("end")   
 }
 
-cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L) {
-    map <- read.xlsx(path, sheet = tab)
+cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L,
+                                            start_row = 1) {
+    map <- read_excel(path, sheet = tab, skip = start_row - 1,
+                      .name_repair = "universal")
     cal_large_data_frame_2_spark(map, dest, step)
 }
 

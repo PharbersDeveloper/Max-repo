@@ -1,8 +1,9 @@
 
 library("BPRSparkCalCommon")
-cal_max_data_panel <- function(uni_2019_path, mkt_path, map_path, c_month, add_data) {
-    uni <- read.df(uni_2019_path, "parquet")
-    uni <- distinct(select(uni, "新版ID", "新版名称"))
+cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) {
+    uni <- read_universe(uni_path)
+    
+    uni <- distinct(select(uni, "PHA", "新版名称"))
    
     uni <- agg(groupBy(uni, "新版ID"), 
                新版名称=first("新版名称")

@@ -3,82 +3,54 @@ source("dataPre/dataPre.R")
 
 cal_J_data_pre <- function() {
     # 0. 数据准备
-    # 0.1 Universe 文件
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/2019年Universe更新维护1.0_190403.xlsx", 
-        "Universe2019", 
-        "hdfs://192.168.100.137:9000//Map-repo/2019年Universe更新维护1.0_190403/Universe2019")
-    
+
     # 0.2 Mapping 文件
     cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/2019年Universe更新维护1.0_190403.xlsx", 
-        "Mapping", 
-        "hdfs://192.168.100.137:9000//Map-repo/2019年Universe更新维护1.0_190403/Mapping")
+        "Y:/MAX/Janssen/Global/医院匹配/Hospital_Code_PHA_final_2.xlsx", 
+        "BI_to_PHA", 
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/MappingPha")
     
-    # 0.3 CPA_VS_GYC_VS_PHA_VS_HH_0418 # Sheet1
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/CPA_VS_GYC_VS_PHA_VS_HH_0418.xlsx",
-        "Sheet1", 
-        "hdfs://192.168.100.137:9000//Map-repo/CPA_VS_GYC_VS_PHA_VS_HH_0418")
     
     # 0.3 190814泰德-1701-1906检索 # 1701-1906
-    cal_excel_large_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/190814泰德-1701-1906检索.xlsx",
-        "1701-1906数据", 
-        "hdfs://192.168.100.137:9000//Map-repo/190814泰德-1701-1906检索2/1701-1906")
+    cal_excel_data_to_parquet(
+        "Y:/MAX/Janssen/UPDATE/1908/Hospital Data for Zytiga Market 201801-201908.xlsx",
+        "Zytiga Broad wo discount", 
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/Hospital_Data_for_Zytiga_Market_201801-201908",
+        4)
+    
+    cal_excel_data_to_parquet(
+        "Y:/MAX/Janssen/UPDATE/1907/Hospital Data for Zytiga Market 201801-201907.xlsx",
+        "Zytiga Broad wo discount", 
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+        4)
+    
+    
+    cal_excel_data_to_parquet(
+        "Y:/MAX/Janssen/UPDATE/1907/Hospital Data for Sustenna Market 201801-201907.xlsx",
+        "Zytiga Broad wo discount", 
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/Hospital_Data_for_Sustenna_Market_201801-201907",
+        4)
     
     # 0.4 universe # 1701-1906
     cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/universe.xlsx",
-        "Sheet1", 
-        "hdfs://192.168.100.137:9000//Map-repo/universe")
-    
-    # 0.5 通用名企业层面集中度_pb.xlsx # Sheet 1
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/通用名企业层面集中度_pb.xlsx",
+        "Y:/MAX/Janssen/MODEL/Sustenna/000ref/universe.xlsx",
         "Sheet 1", 
-        "hdfs://192.168.100.137:9000//Map-repo/通用名企业层面集中度_pb")
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/universe_sustenna")
+    
+    cal_excel_data_to_parquet(
+        "Y:/MAX/Janssen/MODEL/Zytiga/000ref/universe.xlsx",
+        "Sheet 1", 
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/universe_Zytiga")
+    
     
     # 0.6 泰德产品匹配表.xlsx # Sheet 1
     cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/泰德产品匹配表.xlsx",
+        "Y:/MAX/Janssen/Global/Product_matching_table_packid_v2.xlsx",
         "Sheet 1", 
-        "hdfs://192.168.100.137:9000//Map-repo/泰德产品匹配表")
+        "hdfs://192.168.100.137:9000//Map-repo/Janssen/产品匹配表")
     
-    # 0.6 company-global # Sheet 1
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/company-global.xlsx",
-        "Sheet 1", 
-        "hdfs://192.168.100.137:9000//Map-repo/company-global")
-    
-    # 1.0 凯纷/000ref/universe.xlsx #
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/universe_kaifeng.xlsx",
-        "Sheet 1", 
-        "hdfs://192.168.100.137:9000//Map-repo/universe_kaifeng")
 
-    # 1.1 凯纷_Panel_2018.xlsx #
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/凯纷_Panel_2018.xlsx",
-        "Sheet 1", 
-        "hdfs://192.168.100.137:9000//Map-repo/凯纷_Panel_2018")
 
-    # 1.2 去重3.xlsx #     
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/去重3.xlsx",
-        "补充码小的替换100床位以下的", 
-        "hdfs://192.168.100.137:9000//Map-repo/去重3")
 
-    # 1.3 副本医院潜力+-+医院范围，重点科室+医生数_ljx.xlsx #     
-    cal_excel_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/副本医院潜力+-+医院范围，重点科室+医生数_ljx.xlsx",
-        "医生数", 
-        "hdfs://192.168.100.137:9000//Map-repo/副本医院潜力+-+医院范围，重点科室+医生数")
- 
-    # 1.4 全盘数据复原 ind1 #
-    cal_excel_large_data_to_parquet(
-        "/Users/alfredyang/Desktop/code/pharbers/Max-repo/tmp/ind1.xlsx",
-        "Sheet1",
-        "hdfs://192.168.100.137:9000//Map-repo/ind1")
- 
+
 }
