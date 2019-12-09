@@ -79,6 +79,6 @@ cal_time_range <- function(original_range, y) {
     seed_range <- other_years_range %>%
         arrange(other_years_range$weight) %>%
         group_by('PHA', 'Month') %>%
-        agg(Year = first(other_years_range$Year))
+        agg(Year = SparkR::first(other_years_range$Year))
     return(seed_range)
 }

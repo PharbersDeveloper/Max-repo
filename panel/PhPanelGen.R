@@ -3,27 +3,27 @@ library("BPRSparkCalCommon")
 cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) {
     uni <- read_universe(uni_path)
     
-    uni <- distinct(select(uni, "PHA", "新版名称"))
+    uni <- distinct(select(uni, "PHA", "HOSP_NAME"))
    
-    uni <- agg(groupBy(uni, "新版ID"), 
-               新版名称=first("新版名称")
+    uni <- agg(groupBy(uni, "PHA"), 
+               HOSP_NAME=SparkR::first("HOSP_NAME")
               )
     
     mkt <- read.df(mkt_path, "parquet")
     map <- read.df(map_path, "parquet")
     
+    full_product <- ifelse(!isNull(add_data$product_name),
+                           add_data$product_name, add_data$std_mole)
+    
     add_data <- mutate(
         add_data,
-        商品名  = ifelse(!isNull(add_data$商品名),
-                      add_data$商品名, add_data$std_mole)
+        product_name = full_product
     )
     coltypes(add_data)[which(names(add_data) %in% 
                                  c('包装数量'))] <- 'integer'
-    add_data <- concat_multi_cols(add_data, c('商品名',
-                                              '剂型',
-                                              '规格',
-                                              '包装数量',
-                                              '生产企业'),
+    add_data <- concat_multi_cols(add_data, c('product_name',
+                                              'pack_description',
+                                              'company_name'),
                                   'min1',
                                   sep = "|")
    
@@ -36,42 +36,48 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
     need_cleaning <- distinct(select(add_data %>%
                             join(map1, add_data$min1== map1$min1,'left_anti') %>%
                                 drop_dup_cols(),
-                            c("std_mole", "商品名", "剂型", "规格", 
-                              "包装数量", "生产企业", "min1")
+                            c("std_mole", 'product_name',
+                              'pack_description',
+                              'company_name', "min1")
                            ))
     if(nrow(need_cleaning)>0){
-        write.df(need_cleaning, "/Max-repo/need_cleaning", "parquet", "overwrite")
+        need_cleaning_path = 
+            paste0('Y:/MAX/Janssen/UPDATE/',c_month,'/待清洗',Sys.Date(),'.xlsx')
+        print(paste("已输出待清洗文件至", need_cleaning_path))
+        
+        openxlsx::write.xlsx(collect(need_cleaning), 
+                             need_cleaning_path)
     }
     ### Panel
-    mp <- distinct(select(map, "min1", "min2"))
+    mp <- distinct(select(map, "min1", "min2", "通用名"))
     panel <- join(add_data, mp, add_data$min1 == mp$min1, "left") %>%
         drop_dup_cols()
     
-    mkts <- distinct(select(mkt, "市场", "药品名称"))
-    panel <- join(panel, mkts, panel$std_mole == mkts$药品名称, "left") %>%
+    mkts <- distinct(select(mkt, "mkt", "通用名"))
+    panel <- join(panel, mkts, panel$通用名 == mkts$通用名, "left") %>%
         drop_dup_cols()
     
-    panel <- join(panel, uni, panel$新版ID == uni$新版ID, "left") %>%
+    panel <- join(panel, uni, panel$PHA == uni$PHA, "left") %>%
         drop_dup_cols()
     
     panel <- mutate(panel, Date = panel$Year * 100 + panel$Month)
 
     panel <- ColRename(
                 agg(groupBy(panel, 
-                     panel$医院编码,
+                     panel$BI_Code,
                      panel$Date,
                      panel$min2,
-                     panel$市场,
-                     panel$新版名称,
-                     panel$新版ID,
-                     panel$std_mole,
-                     panel$省,
-                     panel$城市
+                     panel$mkt,
+                     panel$HOSP_NAME,
+                     panel$PHA,
+                     panel$通用名,
+                     panel$province_name,
+                     panel$city_name
                     ),
                  Sales = sum(panel$Sales),
                  Units = sum(panel$Units)),
-                c("医院编码", "Date", "min2", "市场", 
-                  "新版名称", "新版ID","std_mole","省","城市"),
+                c("BI_Code", "Date", "min2", "mkt", 
+                  "HOSP_NAME", "PHA","通用名","province_name","city_name"),
                 c("ID", "Date", "Prod_Name", "DOI", 
                   "Hosp_name", "HOSP_ID","Molecule", "Province","City"))
     
@@ -80,9 +86,9 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
                     Strength = panel$Prod_Name,
                     DOIE = panel$DOI)
     
-    panel <- partitionBy(panel, panel$Date, panel$DOI)
+    #panel <- partitionBy(panel, panel$Date, panel$DOI)
     
-    write.df(panel, "/Map-repo/panel-result", "parquet", "overwrite")
+    return(panel)
 }
 
 concat_multi_cols <- function(df, cols, new_col, sep) {

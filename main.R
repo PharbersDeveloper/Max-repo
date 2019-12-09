@@ -50,7 +50,7 @@ id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
 cpa_pha_mapping <- map_cpa_pha(
-  "/Map-repo/Janssen/MappingPha"
+  "/common/projects/max/Janssen/MappingPha"
 )
 
 
@@ -92,7 +92,7 @@ raw_data_adding <- repartition(raw_data_adding, 2L)
 
 
 ##好神奇，写出去再读进来，driver机就不会内存溢出了
-raw_data_adding_path <- "/Map-repo/Janssen/raw_data_adding"
+raw_data_adding_path <- "/common/projects/max/Janssen/raw_data_adding"
 write.parquet(raw_data_adding, raw_data_adding_path, mode = "overwrite")
 raw_data_adding <- read.df(raw_data_adding_path, "parquet")
 
@@ -127,11 +127,14 @@ print(head(chk))
 
 # 2. panel
 
-# panel <-
-#   cal_max_data_panel(
-#     uni_path,
-#     mkt_path = "/Map-repo/通用名企业层面集中度_pb",
-#     map_path = "/Map-repo/泰德产品匹配表",
-#     c_month = "1906",
-#     add_data = adding_data_new
-#   )
+panel <-
+  cal_max_data_panel(
+    uni_path,
+    mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+    map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+    c_month = "1908",
+    add_data = adding_data_new
+  )
+
+write.df(panel, "/common/projects/max/Janssen/panel-result_Zytiga_201701-201908", 
+         "parquet", "overwrite")
