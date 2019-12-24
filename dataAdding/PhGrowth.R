@@ -23,16 +23,16 @@ cal_growth <- function(raw_data, id_city, max_month = 12){
     
     
     gr <- gr_raw_data %>%
-        group_by('std_mole', 'CITYGROUP', "Year") %>% 
+        group_by('Molecule', 'CITYGROUP', "Year") %>% 
         agg(value=sum(gr_raw_data$Sales))
     
     
     gr <- repartition(gr, 2L, 
-                      gr$std_mole,
+                      gr$Molecule,
                       gr$CITYGROUP)
     
     con_schema <- structType(
-        structField("std_mole", "string"),
+        structField("Molecule", "string"),
         structField("CITYGROUP", "string"),
         structField("Year_2018", "double"),
         structField("Year_2019", "double")
@@ -55,11 +55,11 @@ cal_growth <- function(raw_data, id_city, max_month = 12){
     gr <- modify_gr(gr, names(gr)[startsWith(names(gr),'GR')])
     
     gr_with_id <- gr_raw_data %>%
-        select('PHA', '医院编码', 'City', 'CITYGROUP', 'std_mole') %>%
+        select('PHA', 'ID', 'City', 'CITYGROUP', 'Molecule') %>%
         distinct() %>%
         join(gr,
              gr_raw_data$CITYGROUP == gr$CITYGROUP &
-             gr_raw_data$std_mole == gr$std_mole, 'left') %>%
+             gr_raw_data$Molecule == gr$Molecule, 'left') %>%
         drop_dup_cols()
     
     #print(head(gr, 100))

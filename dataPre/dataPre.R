@@ -1,7 +1,7 @@
 require(readxl)
 require(data.table)
 
-cal_excel_data_to_parquet <- function(path, tab, dest, start_row = 1) {
+cal_excel_data_to_parquet <- function(path, tab = 1, dest, start_row = 1) {
     map <- read_excel(path, sheet = tab, skip = start_row - 1,
                       .name_repair = "universal")
     mapDf <- createDataFrame(map)

@@ -12,18 +12,18 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
     mkt <- read.df(mkt_path, "parquet")
     map <- read.df(map_path, "parquet")
     
-    full_product <- ifelse(!isNull(add_data$product_name),
-                           add_data$product_name, add_data$std_mole)
+    full_product <- ifelse(!isNull(add_data$Brand),
+                           add_data$Brand, add_data$Molecule)
     
     add_data <- mutate(
         add_data,
-        product_name = full_product
+        Brand = full_product
     )
     coltypes(add_data)[which(names(add_data) %in% 
                                  c('包装数量'))] <- 'integer'
-    add_data <- concat_multi_cols(add_data, c('product_name',
-                                              'pack_description',
-                                              'company_name'),
+    add_data <- concat_multi_cols(add_data, c('Brand',
+                                              'Specifications',
+                                              'Manufacturer'),
                                   'min1',
                                   sep = "|")
    
@@ -36,9 +36,9 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
     need_cleaning <- distinct(select(add_data %>%
                             join(map1, add_data$min1== map1$min1,'left_anti') %>%
                                 drop_dup_cols(),
-                            c("std_mole", 'product_name',
-                              'pack_description',
-                              'company_name', "min1")
+                            c("Molecule", 'Brand',
+                              'Specifications',
+                              'Manufacturer', "min1")
                            ))
     if(nrow(need_cleaning)>0){
         need_cleaning_path = 
@@ -64,22 +64,23 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
 
     panel <- ColRename(
                 agg(groupBy(panel, 
-                     panel$BI_Code,
+                     panel$ID,
                      panel$Date,
                      panel$min2,
                      panel$mkt,
                      panel$HOSP_NAME,
                      panel$PHA,
                      panel$通用名,
-                     panel$province_name,
-                     panel$city_name
+                     panel$Province,
+                     panel$City,
+                     panel$add_flag
                     ),
                  Sales = sum(panel$Sales),
                  Units = sum(panel$Units)),
-                c("BI_Code", "Date", "min2", "mkt", 
-                  "HOSP_NAME", "PHA","通用名","province_name","city_name"),
+                c("ID", "Date", "min2", "mkt", 
+                  "HOSP_NAME", "PHA","通用名","Province","City","add_flag"),
                 c("ID", "Date", "Prod_Name", "DOI", 
-                  "Hosp_name", "HOSP_ID","Molecule", "Province","City"))
+                  "Hosp_name", "HOSP_ID","Molecule", "Province","City","add_flag"))
     
     panel <- mutate(panel, 
                     Prod_Name = panel$Prod_Name,
