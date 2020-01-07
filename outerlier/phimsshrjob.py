@@ -35,4 +35,4 @@ def max_outlier_ims_shr_job(spark, df_ims_shr):
         .withColumnRenamed("sum(ims_share)", "ims_share") \
         .withColumnRenamed("first(ims_mkt_vol)", "ims_mkt_vol")
 
-    return df_ims_shr_res
+    return [df_ims_shr_res, df_cities]

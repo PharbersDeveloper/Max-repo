@@ -12,8 +12,10 @@ def udf_city_modi(city):
         return city
 
 
-def max_outlier_tmp_mod(spark, df_EIA):
+def max_outlier_tmp_mod(spark, df_EIA, df_seg_city, df_hos_city):
     max_outlier_city_udf = udf(udf_city_modi, StringType())
     df_EIA = df_EIA.withColumn("City", max_outlier_city_udf(df_EIA.City))
-    return df_EIA
+    df_seg_city = df_seg_city.withColumn("City", max_outlier_city_udf(df_seg_city.City))
+    df_hos_city = df_hos_city.withColumn("City", max_outlier_city_udf(df_hos_city.City))
+    return [df_EIA, df_seg_city, df_hos_city]
 
