@@ -1,14 +1,15 @@
 # coding=utf-8
+import itertools
 import pandas as pd
 import numpy as np
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+import time
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as func
 from pyspark.sql.types import *
 
+from phcityoutliertemp import max_outlier_city_loop_template
 from phimsshrjob import max_outlier_ims_shr_job
 from phpnljob import max_outlier_pnl_job
 from phreaddfjob import max_outlier_read_df
@@ -16,6 +17,7 @@ from phpfjob import max_outlier_poi_job
 from phselectcity import max_outlier_select_city
 from phtmpmodify import max_outlier_tmp_mod
 from phunijoineia import max_outlier_eia_join_uni
+from phsegwoot import max_outlier_seg_wo_ot_old, max_outlier_seg_wo_ot_spark
 
 spark = SparkSession.builder \
     .master("yarn") \
@@ -29,6 +31,8 @@ spark.sparkContext.addPyFile("phtmpmodify.py")
 spark.sparkContext.addPyFile("phpnljob.py")
 spark.sparkContext.addPyFile("phimsshrjob.py")
 spark.sparkContext.addPyFile("phselectcity.py")
+spark.sparkContext.addPyFile("phsegwoot.py")
+spark.sparkContext.addPyFile("phcityoutliertemp.py")
 
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 
@@ -52,23 +56,11 @@ df_pnl = max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city)
 # 城市处理逻辑
 df_cities = max_outlier_select_city(spark, df_cities)
 
-# df_ims_shr_res.show()
-# print df_ims_shr_res.count()
+cities = df_cities.drop("key").toPandas()["city"].to_numpy()
+# df_cities.show()
 
-# cities = df_cities.toPandas()
-# data_EIA4 = df_EIA_res.toPandas()
+df_seg_city.persist()
+df_EIA_res.persist()
 
-# cities = np.array(df_seg_city.toPandas()[:, "city"].toList())
-# print cities
+max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
 
-# 通过Seg来过滤数据
-df_seg_city_tmp = df_seg_city.join(df_cities, df_seg_city.City == df_cities.city, how="inner").select("Seg").distinct()
-df_seg_city_tmp.show()
-df_EIA_res.show()
-df_EIA_res = df_EIA_res.join(df_seg_city_tmp, on="Seg", how="inner")
-
-data_EIA5 = df_EIA_res.toPandas()
-print data_EIA5.head()
-prd_input = ["加罗宁", "凯纷", "诺扬"]
-data_EIA5["mkt_size"] = data_EIA5[prd_input].sum(axis=1).fillna(0)+data_EIA5["其它"].fillna(0)
-print data_EIA5.head()
