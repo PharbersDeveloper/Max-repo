@@ -2,7 +2,10 @@
 import itertools
 import pandas as pd
 import numpy as np
+from pyspark.sql import functions as func
+from pyspark.sql.types import *
 
+from phscenot import max_outlier_seg_scen_ot_spark
 from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
 
 '''
@@ -27,7 +30,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
 
         # 策略 1: 选择最大的Seg
         # TODO: 策略2 我没写，@luke
-        print ct
+        # print ct
         ot_seg = df_EIA_res_iter.where(df_EIA_res_iter.PANEL == 1) \
             .groupBy("Seg").sum("Est_DrugIncome_RMB") \
             .orderBy("sum(Est_DrugIncome_RMB)").toPandas()["Seg"].to_numpy()[0]
@@ -48,7 +51,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
 
             scen[ot_city[i][0]] = []
 
-        print cd_arr
+        # print cd_arr
         # print scen
 
         # 这是一个验证，需要@luke跟进
@@ -104,83 +107,12 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # print other_seg_poi
         # print other_seg_oth
         [other_seg_oth, other_seg_poi] = max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot)
-        print other_seg_poi
-        print other_seg_oth
+        # print other_seg_oth
+        # print other_seg_poi
+        df_result = max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
+                                                  df_panel, ct, scen,
+                                                  ot_seg, other_seg_poi, other_seg_oth)
 
-        print scen[ot_seg]
+        # df_result.show()
+        return df_result
 
-        prd_input = ["加罗宁", "凯纷", "诺扬"]
-        poi = []
-        scen_id = []
-        share = []
-        num_ot_lst = []
-        vol_ot_lst = []
-        poi_vol_lst = []
-        mkt_vol_lst = []
-        scen_lst = []
-        # i=0
-
-        df_EIA_res_cur.show()
-        data_EIA6 = df_EIA_res_cur.toPandas()
-        # print data_EIA6
-        panel = df_panel.toPandas()
-        #    按outlier的scenario循环
-        for i in range(len(scen[ot_seg])):
-            #       i=87
-            panel_sc = panel[panel["HOSP_ID"].isin(scen[ot_seg][i])]
-
-            num_ot = len(scen[ot_seg][i])
-            vol_ot = data_EIA6[data_EIA6["HOSP_ID"].isin(panel_sc["HOSP_ID"])]["Est_DrugIncome_RMB"].sum()
-
-            #       print  cities[j]
-            data_EIA7 = data_EIA6[(data_EIA6["BEDSIZE"] >= 100) \
-                                  & (data_EIA6["City"] == ct)]
-            poi_ot = data_EIA7[data_EIA7 \
-                ["HOSP_ID"].isin(panel_sc["HOSP_ID"])][prd_input].sum()
-
-            oth_ot = data_EIA7[data_EIA7["HOSP_ID"].isin(panel_sc["HOSP_ID"])][u"其它"].sum()
-
-            rest = data_EIA6[~data_EIA6["HOSP_ID"].isin(panel_sc["HOSP_ID"])]
-            rest_panel = rest[rest["PANEL"] == 1]
-
-            rest_seg = pd.DataFrame(rest.groupby("Date").sum()[prd_input + [u"其它", "Est_DrugIncome_RMB"]])
-
-            rest_seg_p0_bed100 = pd.DataFrame(rest[(rest["BEDSIZE"] >= 100) \
-                                                   & (rest["City"] == ct)
-                                                   & (rest["PANEL"] == 0)]
-                                              .groupby("Date").sum()[prd_input + [u"其它", "Est_DrugIncome_RMB"]])
-            rest_seg_p1_bed100 = pd.DataFrame(rest[(rest["BEDSIZE"] >= 100) \
-                                                   & (rest["City"] == ct) \
-                                                   & (rest["PANEL"] == 1)] \
-                                              .groupby("Date").sum()[prd_input + [u"其它", "Est_DrugIncome_RMB"]])
-            rest_seg_p1 = pd.DataFrame(rest[(rest["PANEL"] == 1)]
-                                       .groupby("Date").sum()[prd_input + [u"其它", "Est_DrugIncome_RMB"]])
-
-            if len(rest_seg_p0_bed100["Est_DrugIncome_RMB"]) == 0:
-                rest_seg["w"] = rest_seg["Est_DrugIncome_RMB"] * 0
-            else:
-                rest_seg["w"] = np.divide(rest_seg_p0_bed100["Est_DrugIncome_RMB"], rest_seg_p1["Est_DrugIncome_RMB"])
-
-            for iprd in prd_input:
-                rest_seg[iprd + "_fd"] = rest_seg[iprd].fillna(0) * rest_seg["w"] + rest_seg_p1_bed100[iprd].fillna(0)
-
-            rest_seg["oth_fd"] = rest_seg[u"其它"].fillna(0) * rest_seg["w"] + rest_seg_p1_bed100[u"其它"].fillna(0)
-
-            rest_poi = rest_seg[[iprd + "_fd" for iprd in prd_input]].sum()
-            rest_oth = rest_seg["oth_fd"].sum()
-
-            for iprd in prd_input:
-                #           print iprd
-                poi_vol = rest_poi[iprd + "_fd"] + other_seg_poi[iprd] + poi_ot[iprd]
-                mkt_vol = rest_poi.sum() + sum(
-                    other_seg_poi.values()) + poi_ot.sum() + rest_oth + other_seg_oth + oth_ot
-                mkt_share = np.divide(poi_vol, mkt_vol)
-
-                poi += [iprd]
-                scen_id += [i]
-                share += [mkt_share]
-                num_ot_lst += [num_ot]
-                vol_ot_lst += [vol_ot]
-                poi_vol_lst += [poi_vol]
-                mkt_vol_lst += [mkt_vol]
-                scen_lst += [scen[ot_seg][i]]

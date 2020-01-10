@@ -62,5 +62,26 @@ cities = df_cities.drop("key").toPandas()["city"].to_numpy()
 df_seg_city.persist()
 df_EIA_res.persist()
 
-max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
+df_result = max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
 
+df_pnl = df_pnl.withColumnRenamed("City", "city") \
+    .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \
+    .withColumnRenamed("POI_pnl_mkt", "poi_pnl_mkt") \
+    .withColumnRenamed("POI", "poi") \
+    .withColumnRenamed("Sales", "sales")
+
+df_result = df_result.join(df_pnl, on=["city", "poi"], how="left")\
+    .join(df_ims_shr_res, on=["city", "poi"], how="left")
+
+df_result.show()
+
+# 调试Factor 流程
+for ct in cities:
+    print u"正在进行 %s factor的计算" % ct
+    df_rlt = df_result.where(df_result.city == ct)
+    rlt_scs = df_rlt.select("scen_id").distinct().toPandas()["scen_id"].to_numpy().tolist()
+    print rlt_scs
+    for isc in rlt_scs:
+        print isc
+        df_rlt_sc = df_rlt.where(df_rlt.scen_id == isc).fillna(0.0)
+        df_rlt_sc.show()
