@@ -1,7 +1,7 @@
 combind_raw_data <- function(paths, cpa_pha_mapping, dup_gyc=NULL){
     
 
-    for(i in length(paths)){
+    for(i in 1:length(paths)){
         p=paths[i]
         
         tmp <- read_raw_data(p, cpa_pha_mapping)

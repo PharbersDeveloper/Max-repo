@@ -15,7 +15,7 @@ Sys.setenv(YARN_CONF_DIR = "D:/tools/hadoop-2.7.3/etc/hadoop")
 
 ss <- sparkR.session(
     appName = "Max Cal",
-    enableHiveSupport = F,
+    enableHiveSupport = T,
     sparkConfig = list(
         spark.driver.memory = "2g",
         spark.executor.memory = "1g",
@@ -39,6 +39,7 @@ source("dataAdding/PhCombindData.R", encoding = "UTF-8")
 source("dataAdding/PhAddDataNewHosp.R", encoding = "UTF-8")
 source('dataAdding/PhFormatRawData.R', encoding = 'UTF-8')
 source("panel/PhPanelGen.R", encoding = "UTF-8")
+source('dataAdding/PhCombindRawData.R')
 
 
 
@@ -49,19 +50,29 @@ universe <- read_universe(uni_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
-cpa_pha_mapping <- map_cpa_pha(
+if(F){
+  cpa_pha_mapping <- map_cpa_pha(
     "/common/projects/max/Janssen/MappingPha"
-)
+  )
+}
 
 
 
-# 1.3 读取原始样本数据:
-raw_data <- combind_raw_data(
-    c("hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201909",
-      "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Sustenna_Market_201801-201909"),
+# 1.3 读取所有原始样本数据:
+if(F){
+  raw_data <- combind_raw_data(
+    c("hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201910",
+      "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Sustenna_Market_201801-201910"),
     cpa_pha_mapping
-)
-persist(raw_data, "MEMORY_ONLY")
+  )
+  persist(raw_data, "MEMORY_ONLY")
+}
+
+
+raw_data <- sql("select * from CPA_Janssen where company = 'Janssen'")
+print(head(raw_data))
+
+raw_data <- format_raw_data(raw_data)
 
 # 1.4 计算样本医院连
 
@@ -78,7 +89,7 @@ names(gr_with_id) <- c("PHA", "ID", "City", "CITYGROUP", "Molecule",
 printSchema(gr_with_id)
 
 c_year <- 2019
-c_month <- 9
+c_month <- 10
 
 raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
@@ -117,14 +128,16 @@ panel <-
         uni_path,
         mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
         map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-        c_month = "1909",
+        c_month = substr(c_year*100+c_month, 3, 6),
         add_data = adding_data_new
     )
 
 write.df(panel %>% filter(panel$DOI == "Zytiga"), 
-         "/common/projects/max/Janssen/panel-result_Zytiga_201909", 
+         paste0("/common/projects/max/Janssen/panel-result_Zytiga_20",
+                substr(c_year*100+c_month, 3, 6)), 
          "parquet", "overwrite")
 
 write.df(panel %>% filter(panel$DOI == "Sustenna"), 
-         "/common/projects/max/Janssen/panel-result_Sustenna_201909", 
+         paste0("/common/projects/max/Janssen/panel-result_Sustenna_20",
+                substr(c_year*100+c_month, 3, 6)), 
          "parquet", "overwrite")

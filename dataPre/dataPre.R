@@ -8,6 +8,12 @@ cal_excel_data_to_parquet <- function(path, tab = 1, dest, start_row = 1) {
     write.parquet(mapDf, dest)
 }
 
+cal_csv_to_parquet <- function(path, dest) {
+    map <- fread(path, stringsAsFactors = F)
+    mapDf <- createDataFrame(map)
+    write.parquet(mapDf, dest)
+}
+
 cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
     d <- dim(map)
     print(d)

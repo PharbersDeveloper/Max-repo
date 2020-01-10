@@ -3,11 +3,13 @@ library("BPRSparkCalCommon")
 cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) {
     uni <- read_universe(uni_path)
     
-    uni <- distinct(select(uni, "PHA", "HOSP_NAME"))
+    uni <- distinct(select(uni, "PHA", "HOSP_NAME", 'Province', 'City'))
    
-    uni <- agg(groupBy(uni, "PHA"), 
-               HOSP_NAME=SparkR::first("HOSP_NAME")
-              )
+    if(F){
+        uni <- agg(groupBy(uni, "PHA"), 
+                   HOSP_NAME=SparkR::first("HOSP_NAME")
+        )
+    }
     
     mkt <- read.df(mkt_path, "parquet")
     map <- read.df(map_path, "parquet")
@@ -56,6 +58,9 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data) 
     mkts <- distinct(select(mkt, "mkt", "通用名"))
     panel <- join(panel, mkts, panel$通用名 == mkts$通用名, "left") %>%
         drop_dup_cols()
+    
+    panel <- panel %>%
+        drop(c('Province', 'City'))
     
     panel <- join(panel, uni, panel$PHA == uni$PHA, "left") %>%
         drop_dup_cols()
