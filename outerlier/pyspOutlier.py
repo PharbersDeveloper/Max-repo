@@ -2,6 +2,7 @@
 import itertools
 import pandas as pd
 import numpy as np
+from cvxpy import *
 import sys
 import time
 
@@ -66,22 +67,54 @@ df_result = max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, citie
 
 df_pnl = df_pnl.withColumnRenamed("City", "city") \
     .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \
-    .withColumnRenamed("POI_pnl_mkt", "poi_pnl_mkt") \
     .withColumnRenamed("POI", "poi") \
-    .withColumnRenamed("Sales", "sales")
+    .withColumnRenamed("Sales_pnl", "sales_pnl")
+# df_pnl.show()
 
-df_result = df_result.join(df_pnl, on=["city", "poi"], how="left")\
+df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
     .join(df_ims_shr_res, on=["city", "poi"], how="left")
 
 df_result.show()
 
 # 调试Factor 流程
+'''
+    @fst_prd: 计算factor时，仅考虑前几个产品
+    @bias: 计算factor时，偏重于调准mkt的程度（数字越大越准）
+'''
+fst_prd = 3
+bias = 2
+prd_input = ["加罗宁", "凯纷", "诺扬"]
 for ct in cities:
     print u"正在进行 %s factor的计算" % ct
     df_rlt = df_result.where(df_result.city == ct)
     rlt_scs = df_rlt.select("scen_id").distinct().toPandas()["scen_id"].to_numpy().tolist()
-    print rlt_scs
+
     for isc in rlt_scs:
-        print isc
         df_rlt_sc = df_rlt.where(df_rlt.scen_id == isc).fillna(0.0)
         df_rlt_sc.show()
+        # 一个线下算法库，没有替代品的情况下线下计算
+        rltsc = df_rlt_sc.toPandas()
+        f = Variable()
+        poi_ratio = {}
+        mkt_ratio = {}
+
+        for iprd in range(len(rltsc.index)):
+            poi_ratio[iprd] = np.divide(
+                (rltsc["poi_vol"][iprd] - rltsc["sales_pnl"][iprd]) * f + rltsc["sales_pnl"][iprd],
+                rltsc["ims_poi_vol"][iprd]) - 1
+            mkt_ratio[iprd] = np.divide(
+                (rltsc["mkt_vol"][iprd] - rltsc["sales_pnl_mkt"][iprd]) * f + rltsc["sales_pnl_mkt"][iprd],
+                rltsc["ims_mkt_vol"][iprd]) - 1
+
+        par = []
+        for s in range(len(rltsc.index)):
+            if rltsc["poi"][s] in prd_input[:fst_prd]:
+                par += ["np.divide(abs(poi_ratio[%s])," % s + str(bias) + ")"]
+                par += ["abs(mkt_ratio[%s])" % s]
+        exec ("obj=Minimize(max_elemwise(" + ",".join(par) + "))")
+        #        obj=Minimize(max_elemwise(abs(poi_ratio[0]),abs(poi_ratio[1]),abs(poi_ratio[2]),abs(poi_ratio[3]),
+        #                                  abs(mkt_ratio[0]),abs(mkt_ratio[1]),abs(mkt_ratio[2]),abs(mkt_ratio[3])))
+        prob = Problem(obj, [f > 0])
+        prob.solve()
+        print f
+        # df_rlt_sc = spark.createDataFrame(rltsc)
