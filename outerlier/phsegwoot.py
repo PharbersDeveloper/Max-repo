@@ -166,7 +166,7 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
         df_result = df_result.union(df_oth_seg.select("加罗宁_fd", "凯纷_fd", "诺扬_fd", "oth_fd"))
 
     sum_result = df_result.groupBy().sum("加罗宁_fd", "凯纷_fd", "诺扬_fd", "oth_fd").toPandas()
-    print sum_result
+    # print sum_result
     other_seg_poi = {}
     for iprd in prd_input:
         other_seg_poi[iprd] = sum_result.at[0, "sum(" + iprd + "_fd)"]
