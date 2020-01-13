@@ -33,7 +33,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # print ct
         ot_seg = df_EIA_res_iter.where(df_EIA_res_iter.PANEL == 1) \
             .groupBy("Seg").sum("Est_DrugIncome_RMB") \
-            .orderBy("sum(Est_DrugIncome_RMB)").toPandas()["Seg"].to_numpy()[0]
+            .orderBy(func.desc("sum(Est_DrugIncome_RMB)")).toPandas()["Seg"].to_numpy()[0]
         # print ot_seg
 
         df_ot_city = df_EIA_res_iter.where(df_EIA_res_iter.PANEL == 1).select("Seg", "HOSP_ID").distinct()
@@ -115,4 +115,3 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
 
         # df_result.show()
         return df_result
-
