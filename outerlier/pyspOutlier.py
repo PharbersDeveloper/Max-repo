@@ -1,23 +1,19 @@
 # coding=utf-8
-import itertools
-import pandas as pd
 import numpy as np
-import sys
-import time
+from cvxpy import *
 
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as func
 from pyspark.sql.types import *
 
 from phcityoutliertemp import max_outlier_city_loop_template
 from phimsshrjob import max_outlier_ims_shr_job
+from photfactor import max_outlier_factor
 from phpnljob import max_outlier_pnl_job
 from phreaddfjob import max_outlier_read_df
 from phpfjob import max_outlier_poi_job
 from phselectcity import max_outlier_select_city
 from phtmpmodify import max_outlier_tmp_mod
 from phunijoineia import max_outlier_eia_join_uni
-from phsegwoot import max_outlier_seg_wo_ot_old, max_outlier_seg_wo_ot_spark
 
 spark = SparkSession.builder \
     .master("yarn") \
@@ -33,6 +29,7 @@ spark.sparkContext.addPyFile("phimsshrjob.py")
 spark.sparkContext.addPyFile("phselectcity.py")
 spark.sparkContext.addPyFile("phsegwoot.py")
 spark.sparkContext.addPyFile("phcityoutliertemp.py")
+spark.sparkContext.addPyFile("photfactor.py")
 
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 
@@ -61,27 +58,37 @@ cities = df_cities.drop("key").toPandas()["city"].to_numpy()
 
 df_seg_city.persist()
 df_EIA_res.persist()
+df_seg_city.write.format("parquet") \
+    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/seg_city")
+df_EIA_res.write.format("parquet") \
+    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/EIA_res")
+
+cities = [u"北京市"]
+df_seg_city = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/seg_city")
+df_EIA_res = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/EIA_res")
 
 df_result = max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
+df_result.show()
 
 df_pnl = df_pnl.withColumnRenamed("City", "city") \
     .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \
-    .withColumnRenamed("POI_pnl_mkt", "poi_pnl_mkt") \
     .withColumnRenamed("POI", "poi") \
-    .withColumnRenamed("Sales", "sales")
+    .withColumnRenamed("Sales_pnl", "sales_pnl")
+df_pnl.show()
 
-df_result = df_result.join(df_pnl, on=["city", "poi"], how="left")\
+df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
     .join(df_ims_shr_res, on=["city", "poi"], how="left")
 
-df_result.show()
+df_result.write.format("parquet") \
+        .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 
 # 调试Factor 流程
-for ct in cities:
-    print u"正在进行 %s factor的计算" % ct
-    df_rlt = df_result.where(df_result.city == ct)
-    rlt_scs = df_rlt.select("scen_id").distinct().toPandas()["scen_id"].to_numpy().tolist()
-    print rlt_scs
-    for isc in rlt_scs:
-        print isc
-        df_rlt_sc = df_rlt.where(df_rlt.scen_id == isc).fillna(0.0)
-        df_rlt_sc.show()
+# TODO: 可以直接从这里开始调试factor
+cities = [u"北京市"]
+df_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
+[df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
+
+df_factor_result.write.format("parquet") \
+    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/factor_result")
+df_rlt_brf.write.format("parquet") \
+    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/rlt_brf")
