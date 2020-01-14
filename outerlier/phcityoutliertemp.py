@@ -6,6 +6,7 @@ from pyspark.sql import functions as func
 from pyspark.sql.types import *
 
 from phscenot import max_outlier_seg_scen_ot_spark
+from phscenot2 import max_outlier_seg_scen_ot_spark_2
 from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
 
 '''
@@ -112,6 +113,10 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         df_result = max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
                                                   df_panel, ct, scen,
                                                   ot_seg, other_seg_poi, other_seg_oth)
+
+        # df_result = max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
+        #                                           df_panel, ct, scen,
+        #                                           ot_seg, other_seg_poi, other_seg_oth)
 
         # df_result.show()
         return df_result
