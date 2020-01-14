@@ -98,7 +98,6 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # TODO: ot_seg 可能不存在我日
         seg_wo_ot = df_EIA_res_iter.where(df_EIA_res_iter.Seg != ot_seg) \
             .select("Seg").distinct().toPandas()["Seg"].to_numpy()
-        print seg_wo_ot
         # print seg_wo_ot
         # print ot_seg
 

@@ -144,7 +144,6 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
         df_oth_seg = df_oth_seg.join(df_oth_seg_p1_bed100, on="Date", how="left")
         df_oth_seg = df_oth_seg.join(df_oth_seg_p1, on="Date", how="left").fillna(0)
 
-        print df_oth_seg_p0_bed100.count()
         if df_oth_seg_p0_bed100.count() == 0:
             df_oth_seg = df_oth_seg.withColumn("w", func.lit(0))
         else:
