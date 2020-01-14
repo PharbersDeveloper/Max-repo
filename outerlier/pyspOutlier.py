@@ -1,6 +1,6 @@
 # coding=utf-8
 import numpy as np
-from cvxpy import *
+#from cvxpy import *
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
@@ -79,16 +79,16 @@ df_pnl.show()
 df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
     .join(df_ims_shr_res, on=["city", "poi"], how="left")
 
-df_result.write.format("parquet") \
-        .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
+# df_result.write.format("parquet") \
+#         .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 
 # 调试Factor 流程
 # TODO: 可以直接从这里开始调试factor
 cities = [u"北京市"]
 df_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
-[df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
+#[df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
 
-df_factor_result.write.format("parquet") \
-    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/factor_result")
-df_rlt_brf.write.format("parquet") \
-    .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/rlt_brf")
+# df_factor_result.write.format("parquet") \
+#     .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/factor_result")
+# df_rlt_brf.write.format("parquet") \
+#     .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/rlt_brf")
