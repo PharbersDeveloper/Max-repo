@@ -181,7 +181,7 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
             .withColumn("city", func.lit(ct)) \
             .select("poi", "scen_id", "share", "num_ot", "vol_ot", "poi_vol", "mkt_vol", "scen", "city")
 
-        # df_result.show()
+        df_result.show()
         df_result.write.format("parquet") \
             .mode("append").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result1")
         # df_scen_result = df_scen_result.union(df_result)

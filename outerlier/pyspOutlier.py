@@ -77,19 +77,19 @@ df_pnl = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/pnl
 df_ims_shr_res = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/ims")
 
 df_result = max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
-# df_result.show()
+df_result.show()
 
-# df_pnl = df_pnl.withColumnRenamed("City", "city") \
-#     .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \
-#     .withColumnRenamed("POI", "poi") \
-#     .withColumnRenamed("Sales_pnl", "sales_pnl")
-# # df_pnl.show()
-#
-# df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
-#     .join(df_ims_shr_res, on=["city", "poi"], how="left")
-#
-# df_result.write.format("parquet") \
-#         .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
+df_pnl = df_pnl.withColumnRenamed("City", "city") \
+    .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \
+    .withColumnRenamed("POI", "poi") \
+    .withColumnRenamed("Sales_pnl", "sales_pnl")
+# df_pnl.show()
+
+df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
+    .join(df_ims_shr_res, on=["city", "poi"], how="left")
+
+df_result.write.format("parquet") \
+        .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 end_time = time.time()  # 记录程序结束运行时间
 print('Took %f second' % (end_time - start_time))
 
