@@ -31,7 +31,7 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
     ])
     df_factor_result = spark.createDataFrame([], schema)
     for ct in cities:
-        print u"正在进行 %s factor的计算" % ct
+        print (u"正在进行 %s factor的计算" % ct)
         df_rlt = df_result.where(df_result.city == ct)
         rlt_scs = df_rlt.select("scen_id").distinct().toPandas()["scen_id"].to_numpy().tolist()
 
@@ -40,7 +40,7 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
             df_rlt_sc.show()
             # 一个线下算法库，没有替代品的情况下线下计算
             rltsc = df_rlt_sc.toPandas()
-            print len(rltsc)
+            print (len(rltsc))
             f = Variable()
             poi_ratio = {}
             mkt_ratio = {}
@@ -68,7 +68,7 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
             df_tmp = spark.createDataFrame(rltsc)
             df_factor_result = df_factor_result.union(df_tmp)
 
-        print u"已完成 %s factor的计算" % ct
+        print (u"已完成 %s factor的计算" % ct)
 
     df_factor_result = df_factor_result.withColumn("poi_tmp",
                                                    ((df_factor_result.poi_vol - df_factor_result.sales_pnl) *
