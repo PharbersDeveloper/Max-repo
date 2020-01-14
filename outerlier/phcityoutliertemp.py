@@ -6,6 +6,7 @@ from pyspark.sql import functions as func
 from pyspark.sql.types import *
 
 from phscenot import max_outlier_seg_scen_ot_spark
+from phscenot2 import max_outlier_seg_scen_ot_spark_2
 from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
 
 '''
@@ -23,10 +24,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         df_EIA_res_iter = df_EIA_res.join(df_seg_city_iter, on=["Seg"], how="inner")
         df_EIA_res_iter = df_EIA_res_iter.withColumn("mkt_size",
                                                      df_EIA_res_iter["加罗宁"] + df_EIA_res_iter["凯纷"] +
-                                                     df_EIA_res_iter["诺扬"] + df_EIA_res_iter["其它"]) \
-            .where(df_EIA_res_iter["其它"].isNotNull())
-
-        # df_EIA_res_iter.show()
+                                                     df_EIA_res_iter["诺扬"] + df_EIA_res_iter["其它"])
 
         # 策略 1: 选择最大的Seg
         # TODO: 策略2 我没写，@luke
@@ -100,6 +98,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # TODO: ot_seg 可能不存在我日
         seg_wo_ot = df_EIA_res_iter.where(df_EIA_res_iter.Seg != ot_seg) \
             .select("Seg").distinct().toPandas()["Seg"].to_numpy()
+        print seg_wo_ot
         # print seg_wo_ot
         # print ot_seg
 
@@ -109,7 +108,11 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         [other_seg_oth, other_seg_poi] = max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot)
         # print other_seg_oth
         # print other_seg_poi
-        df_result = max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
+        # df_result = max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
+        #                                           df_panel, ct, scen,
+        #                                           ot_seg, other_seg_poi, other_seg_oth)
+
+        df_result = max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
                                                   df_panel, ct, scen,
                                                   ot_seg, other_seg_poi, other_seg_oth)
 

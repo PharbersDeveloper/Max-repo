@@ -92,7 +92,7 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
         StructField("凯纷_fd", DoubleType(), True),
         StructField("诺扬_fd", DoubleType(), True),
         StructField("oth_fd", DoubleType(), True)])
-    df_result = spark.createDataFrame([(0.0, 0.0, 0.0, 0.0)], schema)
+    df_result = spark.createDataFrame([], schema)
     for z in seg_wo_ot:
         df_other_seg = df_EIA_res_iter.where(df_EIA_res_iter.Seg == z)
 
@@ -102,7 +102,7 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
         #     (df_EIA_res_iter.PANEL == 1)
         # )
 
-        df_oth_seg = df_other_seg.groupBy("Date", "Seg").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
+        df_oth_seg = df_other_seg.groupBy("Date").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
             .withColumnRenamed("sum(加罗宁)", "加罗宁") \
             .withColumnRenamed("sum(凯纷)", "凯纷") \
             .withColumnRenamed("sum(诺扬)", "诺扬") \
@@ -113,7 +113,7 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
             (df_other_seg.BEDSIZE >= 100) &
             (df_other_seg.City == ct) &
             (df_other_seg.PANEL == 0)
-        ).groupBy("Date", "Seg").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
+        ).groupBy("Date").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
             .withColumnRenamed("sum(加罗宁)", "加罗宁_p0_bed100") \
             .withColumnRenamed("sum(凯纷)", "凯纷_p0_bed100") \
             .withColumnRenamed("sum(诺扬)", "诺扬_p0_bed100") \
@@ -124,7 +124,7 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
             (df_other_seg.BEDSIZE >= 100) &
             (df_other_seg.City == ct) &
             (df_other_seg.PANEL == 1)
-        ).groupBy("Date", "Seg").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
+        ).groupBy("Date").sum("加罗宁", "凯纷", "诺扬", "其它", "Est_DrugIncome_RMB") \
             .withColumnRenamed("sum(加罗宁)", "加罗宁_p1_bed100") \
             .withColumnRenamed("sum(凯纷)", "凯纷_p1_bed100") \
             .withColumnRenamed("sum(诺扬)", "诺扬_p1_bed100") \
@@ -142,8 +142,9 @@ def max_outlier_seg_wo_ot_spark(spark, df_EIA_res_iter, ct, seg_wo_ot, ):
 
         df_oth_seg = df_oth_seg.join(df_oth_seg_p0_bed100, on="Date", how="left")
         df_oth_seg = df_oth_seg.join(df_oth_seg_p1_bed100, on="Date", how="left")
-        df_oth_seg = df_oth_seg.join(df_oth_seg_p1, on="Date", how="left")
+        df_oth_seg = df_oth_seg.join(df_oth_seg_p1, on="Date", how="left").fillna(0)
 
+        print df_oth_seg_p0_bed100.count()
         if df_oth_seg_p0_bed100.count() == 0:
             df_oth_seg = df_oth_seg.withColumn("w", func.lit(0))
         else:
