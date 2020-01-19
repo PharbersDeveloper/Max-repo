@@ -21,7 +21,7 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
         StructField("vol_ot", DoubleType(), True),
         StructField("poi_vol", DoubleType(), True),
         StructField("mkt_vol", DoubleType(), True),
-        StructField("scen", StringType(), True),
+        StructField("scen", ArrayType(StringType()), True),
         StructField("sales_pnl", DoubleType(), True),
         StructField("sales_pnl_mkt", DoubleType(), True),
         StructField("ims_share", DoubleType(), True),
