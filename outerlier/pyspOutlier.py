@@ -6,6 +6,7 @@ from pyspark.sql import SparkSession
 import time
 from pyspark.sql.types import *
 
+from phOurlierParameters import *
 from phcityoutliertemp import max_outlier_city_loop_template
 from phimsshrjob import max_outlier_ims_shr_job
 from photfactor import max_outlier_factor
