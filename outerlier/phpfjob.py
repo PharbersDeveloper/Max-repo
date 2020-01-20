@@ -5,20 +5,23 @@ import json
 
 
 def udf_get_poi(pdn):
-    prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
+    #prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
     result = ""
     for item in prd_input:
         if item in pdn:
             result = item
 
     if result == "":
-        return u"其它"
+        return "other"
     else:
         return result
 
 
 def udf_poi_stack(p, s):
-    return json.dumps({u"加罗宁": 0, u"凯纷": 0, u"诺扬": 0, u"其它": 0, p: s})
+    dic_stack = dict([(prd_input[p],0) for p in range(len(prd_input))])
+    dic_stack.update({"other": 0, p: s})
+    return json.dumps(dic_stack)
+    # return json.dumps({u"加罗宁": 0, u"凯纷": 0, u"诺扬": 0, u"其它": 0, p: s})
 
 
 def max_outlier_poi_job(spark, df_EIA):
@@ -63,14 +66,7 @@ def max_outlier_poi_job(spark, df_EIA):
         .withColumnRenamed("sum(Units)", "Units")
 
     df_EIA_res = df_EIA_res.withColumn("value", max_outlier_poi_stack_udf(df_EIA_res.POI, df_EIA_res.Sales))
-    schema = StructType(
-        [
-            StructField(u"凯纷", DoubleType()),
-            StructField(u"诺扬", DoubleType()),
-            StructField(u"其它", DoubleType()),
-            StructField(u"加罗宁", DoubleType()),
-        ]
-    )
+    schema = udf_add_struct(prd_prod)
 
     df_EIA_res = df_EIA_res.select(
         "ID", "Date", "Hosp_name", "HOSP_ID", "POI", "Year",

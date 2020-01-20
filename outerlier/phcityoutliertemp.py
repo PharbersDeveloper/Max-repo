@@ -17,14 +17,15 @@ from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
 '''
 
 
-def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max=8, smpl_max=8):
+def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max=1, smpl_max=1):
     for ct in cities:
         # 通过Seg来过滤数据
         df_seg_city_iter = df_seg_city.where(df_seg_city.City == ct).select("Seg").distinct()
         df_EIA_res_iter = df_EIA_res.join(df_seg_city_iter, on=["Seg"], how="inner")
-        df_EIA_res_iter = df_EIA_res_iter.withColumn("mkt_size",
-                                                     df_EIA_res_iter["加罗宁"] + df_EIA_res_iter["凯纷"] +
-                                                     df_EIA_res_iter["诺扬"] + df_EIA_res_iter["其它"])
+        # df_EIA_res_iter = df_EIA_res_iter.withColumn("mkt_size",
+        #                                              df_EIA_res_iter["加罗宁"] + df_EIA_res_iter["凯纷"] +
+        #                                              df_EIA_res_iter["诺扬"] + df_EIA_res_iter["其它"])
+        df_EIA_res_iter = cal_mkt(df_EIA_res_iter)
 
         # 策略 1: 选择最大的Seg
         # TODO: 策略2 我没写，@luke

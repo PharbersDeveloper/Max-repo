@@ -11,7 +11,7 @@ from cvxpy import *
 
 
 def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
-    prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
+    #prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
     schema = StructType([
         StructField("city", StringType(), True),
         StructField("poi", StringType(), True),
@@ -58,12 +58,14 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
                 if rltsc["poi"][s] in prd_input[:fst_prd]:
                     par += ["np.divide(abs(poi_ratio[%s])," % s + str(bias) + ")"]
                     par += ["abs(mkt_ratio[%s])" % s]
-            exec ("obj=Minimize(maximum(" + ",".join(par) + "))")
+            exec ("obj=Minimize(max_elemwise(" + ",".join(par) + "))")
             # #        obj=Minimize(max_elemwise(abs(poi_ratio[0]),abs(poi_ratio[1]),abs(poi_ratio[2]),abs(poi_ratio[3]),
             #                                  abs(mkt_ratio[0]),abs(mkt_ratio[1]),abs(mkt_ratio[2]),abs(mkt_ratio[3])))
             prob = Problem(obj, [0 <= f])
             prob.solve()
             rltsc["factor"] = f.value
+
+            rltsc["scen"] = ",".join(rltsc["scen"])
 
             df_tmp = spark.createDataFrame(rltsc)
             df_factor_result = df_factor_result.union(df_tmp)
