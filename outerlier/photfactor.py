@@ -2,6 +2,7 @@
 from pyspark.sql.types import *
 import numpy as np
 from cvxpy import *
+from phOutlierParameters import prd_input
 
 # 调试Factor 流程
 '''
@@ -64,8 +65,10 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
             prob = Problem(obj, [0 <= f])
             prob.solve()
             rltsc["factor"] = f.value
+            for i in range(len(rltsc)):
+                rltsc["scen"][i] = ",".join(rltsc["scen"][i])
 
-            rltsc["scen"] = ",".join(rltsc["scen"])
+            #rltsc["scen"] = ",".join(rltsc["scen"])
 
             df_tmp = spark.createDataFrame(rltsc)
             df_factor_result = df_factor_result.union(df_tmp)

@@ -1,21 +1,29 @@
+from pyspark.sql.types import *
 
 
 def udf_add_struct(prd_prod):
+    # schema = StructType(
+    #     [
+    #         StructField("other", DoubleType())
+    #     ]
+    # )
+
+    # for i in range(len(prd_prod)):
+    #     if i == 0:
+    #         schema = StructType(
+    #             [
+    #                 StructField(prd_prod[0], DoubleType())
+    #             ]
+    #         )
+    #     else:
+    #         schema.add(
+    #             StructField(prd_prod[i], DoubleType())
+    #         )
     schema = StructType(
-        [
-            StructField("other", DoubleType())
-        ]
+        []
     )
-    for p in prd_prod:
+    for i in range(len(prd_prod)):
         schema.add(
-            StructType(
-                [
-                    StructField(p, DoubleType())
-                ]
+                StructField(prd_prod[i], DoubleType())
             )
-        )
-     return schema
-
-
-
-
+    return schema

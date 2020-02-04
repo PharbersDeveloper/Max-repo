@@ -6,7 +6,7 @@ from pyspark.sql import SparkSession
 import time
 from pyspark.sql.types import *
 
-from phOurlierParameters import *
+from phOutlierParameters import *
 from phcityoutliertemp import max_outlier_city_loop_template
 from phimsshrjob import max_outlier_ims_shr_job
 from photfactor import max_outlier_factor
@@ -16,6 +16,7 @@ from phpfjob import max_outlier_poi_job
 from phselectcity import max_outlier_select_city
 from phtmpmodify import max_outlier_tmp_mod
 from phunijoineia import max_outlier_eia_join_uni
+
 
 spark = SparkSession.builder \
     .master("yarn") \
@@ -34,6 +35,8 @@ spark.sparkContext.addPyFile("phcityoutliertemp.py")
 spark.sparkContext.addPyFile("photfactor.py")
 spark.sparkContext.addPyFile("phCalMktUdf.py")
 spark.sparkContext.addPyFile("phSetSchema.py")
+spark.sparkContext.addPyFile("phOutlierParameters.py")
+spark.sparkContext.addPyFile("phRename.py")
 
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 
@@ -41,19 +44,20 @@ spark.sparkContext.addPyFile("phSetSchema.py")
 [df_EIA, df_uni, df_seg_city, df_hos_city, df_ims_shr] = max_outlier_read_df(spark, uni_path, pnl_path, ims_path)
 # TODO：缺基于产品去重复
 # POI 处理
-[df_EIA_res, df_EIA] = max_outlier_poi_job(spark, df_EIA)
+print prd_input
+[df_EIA_res, df_EIA] = max_outlier_poi_job(spark, df_EIA, prd_input)
 df_EIA_res.persist()
 df_EIA.persist()
 # 处理universe join EIA
 df_EIA_res = max_outlier_eia_join_uni(spark, df_EIA_res, df_uni)
 # 对福建，厦门，泉州，珠江三角的调整需要
 [df_EIA_res, df_seg_city, df_hos_city] = max_outlier_tmp_mod(spark, df_EIA_res, df_seg_city, df_hos_city)
-df_EIA_res.persist()
+# df_EIA_res.persist()
 # df_EIA_res.show()
 # 对Panel医院的数据整理， 用户factor的计算
 df_pnl = max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city)
 # ims 个城市产品市场份额
-[df_ims_shr_res, df_cities] = max_outlier_ims_shr_job(spark, df_ims_shr)
+[df_ims_shr_res, df_cities] = max_outlier_ims_shr_job(spark, df_ims_shr, prd_input)
 # 城市处理逻辑
 df_cities = max_outlier_select_city(spark, df_cities)
 

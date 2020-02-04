@@ -13,16 +13,16 @@ def gen_poi_with_input(prds):
     return result
 
 
-def max_outlier_ims_shr_job(spark, df_ims_shr):
+def max_outlier_ims_shr_job(spark, df_ims_shr, prd_input):
     df_ims_shr = df_ims_shr.where(
         (df_ims_shr.city != "CHPA")
-        & (df_ims_shr.city == "北京市")
+        # & (df_ims_shr.city == "北京市")
         # & (df_ims_shr.city == "宁波市")
         # & (df_ims_shr.city == "珠三角市")
     )
     df_cities = df_ims_shr.select("city").distinct().withColumn("key", func.lit(1))
 
-    prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
+    # prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
     schema = StructType([StructField("key", IntegerType(), True), StructField("poi", StringType(), True)])
     df_tmp_poi = spark.createDataFrame(gen_poi_with_input(prd_input), schema)
 

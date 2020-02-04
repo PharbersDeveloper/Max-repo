@@ -9,6 +9,7 @@ from phCalMktUdf import cal_mkt
 from phscenot import max_outlier_seg_scen_ot_spark
 from phscenot2 import max_outlier_seg_scen_ot_spark_2
 from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
+from phOutlierParameters import prd_input
 
 '''
     @num_ot_max: 为每个城市选择outlier的数量上限
@@ -26,7 +27,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # df_EIA_res_iter = df_EIA_res_iter.withColumn("mkt_size",
         #                                              df_EIA_res_iter["加罗宁"] + df_EIA_res_iter["凯纷"] +
         #                                              df_EIA_res_iter["诺扬"] + df_EIA_res_iter["其它"])
-        df_EIA_res_iter = cal_mkt(df_EIA_res_iter)
+        df_EIA_res_iter = cal_mkt(prd_input, df_EIA_res_iter)
 
         # 策略 1: 选择最大的Seg
         # TODO: 策略2 我没写，@luke

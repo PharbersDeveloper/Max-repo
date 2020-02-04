@@ -2,7 +2,9 @@
 from pyspark.sql.functions import udf, from_json
 from pyspark.sql.types import *
 import json
-
+from phSetSchema import udf_add_struct
+from phRename import udf_rename
+from phOutlierParameters import prd_input
 
 def udf_get_poi(pdn):
     #prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
@@ -24,7 +26,7 @@ def udf_poi_stack(p, s):
     # return json.dumps({u"加罗宁": 0, u"凯纷": 0, u"诺扬": 0, u"其它": 0, p: s})
 
 
-def max_outlier_poi_job(spark, df_EIA):
+def max_outlier_poi_job(spark, df_EIA, prd_input):
     max_outlier_poi_udf = udf(udf_get_poi, StringType())
     max_outlier_poi_stack_udf = udf(udf_poi_stack, StringType())
 
@@ -66,29 +68,44 @@ def max_outlier_poi_job(spark, df_EIA):
         .withColumnRenamed("sum(Units)", "Units")
 
     df_EIA_res = df_EIA_res.withColumn("value", max_outlier_poi_stack_udf(df_EIA_res.POI, df_EIA_res.Sales))
-    schema = udf_add_struct(prd_prod)
+    schema = udf_add_struct(prd_input+["other"])
+
+    # df_EIA_res = df_EIA_res.select(
+    #     "ID", "Date", "Hosp_name", "HOSP_ID", "POI", "Year",
+    #     "Prod_Name", "Prod_CNAME", "Strength", "DOI",
+    #     "DOIE", "Sales", "Units",
+    #     from_json(df_EIA_res.value, schema).alias("json")
+    # ).select(
+    #     "ID", "Date", "Hosp_name", "HOSP_ID", "POI", "Year",
+    #     "Prod_Name", "Prod_CNAME", "Strength", "DOI",
+    #     "DOIE", "Sales", "Units", "json.*")
+
 
     df_EIA_res = df_EIA_res.select(
-        "ID", "Date", "Hosp_name", "HOSP_ID", "POI", "Year",
-        "Prod_Name", "Prod_CNAME", "Strength", "DOI",
-        "DOIE", "Sales", "Units",
+        "ID", "Date", "Hosp_name", "HOSP_ID", "Year",
         from_json(df_EIA_res.value, schema).alias("json")
     ).select(
-        "ID", "Date", "Hosp_name", "HOSP_ID", "POI", "Year",
-        "Prod_Name", "Prod_CNAME", "Strength", "DOI",
-        "DOIE", "Sales", "Units", "json.*")
+        "ID", "Date", "Hosp_name", "HOSP_ID", "Year",
+        "json.*")
+    # spark版本不支持这样删除列
+    # del df_EIA_res["Prod_Name", "Prod_CNAME", "Strength", "DOI", "DOIE", "Sales", "Units", "POI"]
 
-    df_EIA_res = df_EIA_res.groupBy("ID", "Date", "Hosp_name", "HOSP_ID", "Year").agg(
-        {
-            "凯纷": "sum",
-            "诺扬": "sum",
-            "其它": "sum",
-            "加罗宁": "sum",
-        })\
-        .withColumnRenamed("sum(凯纷)", "凯纷")\
-        .withColumnRenamed("sum(诺扬)", "诺扬")\
-        .withColumnRenamed("sum(其它)", "其它")\
-        .withColumnRenamed("sum(加罗宁)", "加罗宁")
+    # df_EIA_res = df_EIA_res.groupBy("ID", "Date", "Hosp_name", "HOSP_ID", "Year").agg(
+    #     {
+    #         "凯纷": "sum",
+    #         "诺扬": "sum",
+    #         "其它": "sum",
+    #         "加罗宁": "sum",
+    #     })\
+    #     .withColumnRenamed("sum(凯纷)", "凯纷")\
+    #     .withColumnRenamed("sum(诺扬)", "诺扬")\
+    #     .withColumnRenamed("sum(其它)", "其它")\
+    #     .withColumnRenamed("sum(加罗宁)", "加罗宁")
+    # TODO:group里面的列怎么不被sum
+    df_EIA_res = df_EIA_res.groupBy("ID", "Date", "Hosp_name", "HOSP_ID", "Year").\
+        sum(*prd_input+["other"])
+    print df_EIA_res.columns
+    df_EIA_res = udf_rename(df_EIA_res, prd_input + ["other"])
 
     # print df_EIA.count()
     # df_EIA.show()
