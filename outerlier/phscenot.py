@@ -48,7 +48,7 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
         df_poi_ot = df_EIA_res_cur_ct_b100 \
             .where(df_EIA_res_cur_ct_b100.HOSP_ID.isin(condi)).groupBy() \
             .sum(*prd_input)
-        df_poi_ot = udf_rename(df_poi_ot, prd_input)
+        df_poi_ot = udf_rename(df_poi_ot, prd_input).fillna(0.0)
 
         df_poi_ot.show()
 
@@ -129,13 +129,13 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
                             df_rest_seg[iprd] * df_rest_seg.w + df_rest_seg[iprd + "_p1_bed100"])
 
         df_rest_seg = df_rest_seg \
-            .withColumn("oth_fd",
-                        df_rest_seg["其它"] * df_rest_seg.w + df_rest_seg["其它_p1_bed100"])
+            .withColumn("other_fd",
+                        df_rest_seg["other"] * df_rest_seg.w + df_rest_seg["other_p1_bed100"])
 
-        df_rest_poi = df_rest_seg.groupBy().sum("加罗宁_fd", "凯纷_fd", "诺扬_fd") \
-            .withColumnRenamed("sum(加罗宁_fd)", "加罗宁_fd") \
-            .withColumnRenamed("sum(凯纷_fd)", "凯纷_fd") \
-            .withColumnRenamed("sum(诺扬_fd)", "诺扬_fd")
+        # df_rest_poi = df_rest_seg.groupBy().sum("加罗宁_fd", "凯纷_fd", "诺扬_fd") \
+        #     .withColumnRenamed("sum(加罗宁_fd)", "加罗宁_fd") \
+        #     .withColumnRenamed("sum(凯纷_fd)", "凯纷_fd") \
+        #     .withColumnRenamed("sum(诺扬_fd)", "诺扬_fd")
 
         df_rest_poi = df_rest_seg.groupBy("Date").sum(*[p+"_fd" for p in prd_input])
         df_rest_poi = udf_rename(df_rest_poi, [p+"_fd" for p in prd_input])
@@ -154,14 +154,14 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
         df_rest_poi = udf_new_columns(df_rest_poi, ["k"], "", 1)
 
         df_rest_oth = df_rest_oth \
-            .withColumnRenamed("other_fd", "other_fd_rest_oth") \
+            .withColumnRenamed("other_fd", "other_fd_rest_poi") \
             .withColumn("k", func.lit(1))
 
-        df_poi_ot = df_poi_ot \
-            .withColumnRenamed("加罗宁", "加罗宁_poi_ot") \
-            .withColumnRenamed("凯纷", "凯纷_poi_ot") \
-            .withColumnRenamed("诺扬", "诺扬_poi_ot") \
-            .withColumn("k", func.lit(1))
+        # df_poi_ot = df_poi_ot \
+        #     .withColumnRenamed("加罗宁", "加罗宁_poi_ot") \
+        #     .withColumnRenamed("凯纷", "凯纷_poi_ot") \
+        #     .withColumnRenamed("诺扬", "诺扬_poi_ot") \
+        #     .withColumn("k", func.lit(1))
         df_poi_ot = udf_rename(df_poi_ot, [p for p in prd_input],"_poi_ot")
         df_poi_ot = udf_new_columns(df_poi_ot, ["k"], "", 1)
 

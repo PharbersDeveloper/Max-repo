@@ -2,7 +2,6 @@
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
 
-
 '''
     需要在list中选择 需要挑选outlier 的城市
 '''

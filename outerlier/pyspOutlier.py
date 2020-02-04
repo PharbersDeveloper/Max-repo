@@ -59,10 +59,10 @@ df_pnl = max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city)
 # ims 个城市产品市场份额
 [df_ims_shr_res, df_cities] = max_outlier_ims_shr_job(spark, df_ims_shr, prd_input)
 # 城市处理逻辑
-df_cities = max_outlier_select_city(spark, df_cities)
+#df_cities = max_outlier_select_city(spark, df_cities)
 
-cities = df_cities.drop("key").toPandas()["city"].to_numpy()
-df_cities.show()
+#cities = df_cities.drop("key").toPandas()["city"].to_numpy()
+#df_cities.show()
 
 # df_seg_city.persist()
 # df_EIA_res.persist()
@@ -77,7 +77,7 @@ df_cities.show()
 
 start_time = time.time()  # 记录程序开始运行时间
 
-cities = [u"北京市"]
+#cities = [u"北京市"]
 # df_seg_city = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/seg_city")
 # df_EIA_res = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/EIA_res")
 # df_pnl = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/pnl")
