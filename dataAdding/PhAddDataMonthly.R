@@ -14,14 +14,14 @@ Sys.setenv(SPARK_HOME = "D:/tools/spark-2.3.0-bin-hadoop2.7")
 Sys.setenv(YARN_CONF_DIR = "D:/tools/hadoop-2.7.3/etc/hadoop")
 
 ss <- sparkR.session(
-  appName = "Max Cal",
-  enableHiveSupport = T,
-  sparkConfig = list(
-    spark.driver.memory = "2g",
-    spark.executor.memory = "1g",
-    spark.executor.cores = "2",
-    spark.executor.instances = "2"
-  )
+    appName = "Max Cal",
+    enableHiveSupport = T,
+    sparkConfig = list(
+        spark.driver.memory = "2g",
+        spark.executor.memory = "1g",
+        spark.executor.cores = "2",
+        spark.executor.instances = "2"
+    )
 )
 
 # source("dataPre/PhDataPre.R")
@@ -58,31 +58,40 @@ if(F){
 
 
 
-# 1.3 读取原始样本数据:
+# 1.3 读取所有原始样本数据:
 if(F){
-  raw_data <- read_raw_data(
-    "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+  raw_data <- combind_raw_data(
+    c("hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201910",
+      "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Sustenna_Market_201801-201910"),
     cpa_pha_mapping
   )
   persist(raw_data, "MEMORY_ONLY")
 }
 
 
-
 raw_data <- sql("select * from CPA_Janssen where company = 'Janssen'")
 print(head(raw_data))
+
 raw_data <- format_raw_data(raw_data)
 
-# 1.4 计算样本医院连续性:
-con_all <- cal_continuity(raw_data)
-
-con <- con_all[[2]]
+# 1.4 计算样本医院连
 
 
 # 1.5 计算样本分子增长率:
-gr_all <- cal_growth(raw_data, id_city, max_month = 7)
-gr <- gr_all[[1]]
-gr_with_id <- gr_all[[2]]
+
+#gr_with_id <- gr_all[[2]]
+gr_with_id <- read.df("hdfs://192.168.100.137:8020//common/projects/max/Janssen/gr_with_id",
+                      "parquet")
+
+names(gr_with_id) <- c("PHA", "ID", "City", "CITYGROUP", "Molecule",
+                       "Year_2018", "Year_2019", "GR1819")
+
+printSchema(gr_with_id)
+
+c_year <- 2019
+c_month <- 10
+
+raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
 
 # 1.6 原始数据格式整理:
@@ -94,45 +103,19 @@ persist(seed, "MEMORY_ONLY")
 adding_results <- add_data(seed)
 
 adding_data <- adding_results[[1]]
-original_range <- adding_results[[2]]
-persist(original_range, "MEMORY_ONLY")
+
 
 # 1.8 合并补数部分和原始部分:
 raw_data_adding <- combind_data(raw_data, adding_data)
 raw_data_adding <- repartition(raw_data_adding, 2L)
 
 
-##好神奇，写出去再读进来，driver机就不会内存溢出了
-if(F){
-  raw_data_adding_path <- "/common/projects/max/Janssen/raw_data_adding"
-  write.parquet(raw_data_adding, raw_data_adding_path, mode = "overwrite")
-  raw_data_adding <- read.df(raw_data_adding_path, "parquet")
-  
-}
-
-
-unpersist(seed, blocking = FALSE)
-unpersist(raw_data, blocking = FALSE)
-
-# 1.9 进一步为最后一年独有的医院补最后一年的缺失月份
-#      （可能也要考虑第一年）:
-
-adding_data_new <- add_data_new_hosp(raw_data_adding, original_range)
-# persist(adding_data_new, "MEMORY_AND_DISK")
-# unpersist(original_range, blocking = FALSE)
-
-# 1.10 检查补数占比:
-
-
-# 1.11 输出补数结果:
-# print(head(adding_data_new))
-# print(count(adding_data_new))
-#write.parquet(adding_data_new, "\\Map-repo\\adding_data_result", mode = "overwrite")
-#add_res <- read.df("\\Map-repo\\adding_data_result", "parquet")
+adding_data_new <- raw_data_adding %>%
+    filter(raw_data_adding$Year == c_year)
 
 chk <- agg(groupBy(
-  adding_data_new,
-  "Year", "add_flag"
+    adding_data_new,
+    "Year", "add_flag"
 ),
 Sales = "sum"
 )
@@ -141,13 +124,20 @@ print(head(chk))
 # 2. panel
 
 panel <-
-  cal_max_data_panel(
-    uni_path,
-    mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-    map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-    c_month = "1908",
-    add_data = adding_data_new
-  )
+    cal_max_data_panel(
+        uni_path,
+        mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+        map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+        c_month = substr(c_year*100+c_month, 3, 6),
+        add_data = adding_data_new
+    )
 
-write.df(panel, "/common/projects/max/Janssen/panel-result_Zytiga_201801-201908", 
+write.df(panel %>% filter(panel$DOI == "Zytiga"), 
+         paste0("/common/projects/max/Janssen/panel-result_Zytiga_20",
+                substr(c_year*100+c_month, 3, 6)), 
+         "parquet", "overwrite")
+
+write.df(panel %>% filter(panel$DOI == "Sustenna"), 
+         paste0("/common/projects/max/Janssen/panel-result_Sustenna_20",
+                substr(c_year*100+c_month, 3, 6)), 
          "parquet", "overwrite")

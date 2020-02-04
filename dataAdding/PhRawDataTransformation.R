@@ -1,7 +1,7 @@
 
 
 trans_raw_data_for_adding <- function(raw_data, id_city, gr_with_id){
-    gr_with_id <- gr_with_id[,c('CITYGROUP','std_mole',
+    gr_with_id <- gr_with_id[,c('CITYGROUP','Molecule',
                                 names(gr_with_id)[startsWith(names(gr_with_id),
                                                              'GR1')])] %>%
         distinct()
@@ -11,7 +11,7 @@ trans_raw_data_for_adding <- function(raw_data, id_city, gr_with_id){
     names(seed)[names(seed)=='City_Tier_2010']<-'CITYGROUP'
     seed <- seed %>%
         join(gr_with_id,
-             seed$std_mole==gr_with_id$std_mole &
+             seed$Molecule==gr_with_id$Molecule &
                  seed$CITYGROUP==gr_with_id$CITYGROUP, 'left') %>%
         drop_dup_cols()
     # seed <- seed %>%
