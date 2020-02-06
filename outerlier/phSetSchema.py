@@ -23,8 +23,8 @@ def udf_add_struct(prd_prod):
     schema = StructType(
         []
     )
-    for i in range(len(prd_prod)):
+    for i in prd_prod:
         schema.add(
-                StructField(prd_prod[i], DoubleType())
+                StructField(i, DoubleType(), True)
             )
     return schema

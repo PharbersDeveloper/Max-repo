@@ -18,9 +18,9 @@ def udf_get_poi(pdn):
     else:
         return result
 
-
+#.encode("utf-8").decode("utf-8")
 def udf_poi_stack(p, s):
-    dic_stack = dict([(prd_input[p],0) for p in range(len(prd_input))])
+    dic_stack = dict([(i,0) for i in prd_input])
     dic_stack.update({"other": 0, p: s})
     return json.dumps(dic_stack)
     # return json.dumps({u"加罗宁": 0, u"凯纷": 0, u"诺扬": 0, u"其它": 0, p: s})

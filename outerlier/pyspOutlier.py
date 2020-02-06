@@ -48,6 +48,7 @@ print prd_input
 [df_EIA_res, df_EIA] = max_outlier_poi_job(spark, df_EIA, prd_input)
 df_EIA_res.persist()
 df_EIA.persist()
+df_EIA_res.show()
 # 处理universe join EIA
 df_EIA_res = max_outlier_eia_join_uni(spark, df_EIA_res, df_uni)
 # 对福建，厦门，泉州，珠江三角的调整需要

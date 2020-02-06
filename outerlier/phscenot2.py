@@ -48,6 +48,7 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
     df_scen_ot_seg = df_scen_ot_seg.repartition(1).withColumn("scen_id", func.monotonically_increasing_id()) \
         .withColumn("num_ot", func.size("scen"))
 
+
     df_EIA_res_cur = df_EIA_res_cur.withColumn("scen_id_lst", rep_EIA())
     df_EIA_res_cur = df_EIA_res_cur.select("*", func.explode("scen_id_lst").alias("scen_id")).drop("scen_id_lst")
 
@@ -107,7 +108,7 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
         # .withColumnRenamed("sum(其它)", "其它_p0_bed100") \
         # .withColumnRenamed("sum(Est_DrugIncome_RMB)", "Est_DrugIncome_RMB_p0_bed100").fillna(0.0)
 
-    df_rest_seg_p0_bed100 = df_EIA_res_rest.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
+    df_rest_seg_p0_bed100 = df_rest_seg_p0_bed100.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
     df_rest_seg_p0_bed100 = udf_rename(df_rest_seg_p0_bed100, [p for p in prd_input]+["other","Est_DrugIncome_RMB"],"_p0_bed100")
     df_rest_seg_p0_bed100 = df_rest_seg_p0_bed100.fillna(0.0)
 
@@ -122,7 +123,7 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
         # .withColumnRenamed("sum(其它)", "其它_p1_bed100") \
         # .withColumnRenamed("sum(Est_DrugIncome_RMB)", "Est_DrugIncome_RMB_p1_bed100").fillna(0.0)
 
-    df_rest_seg_p1_bed100 = df_EIA_res_rest.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
+    df_rest_seg_p1_bed100 = df_rest_seg_p1_bed100.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
     df_rest_seg_p1_bed100 = udf_rename(df_rest_seg_p1_bed100, [p for p in prd_input]+["other","Est_DrugIncome_RMB"],"_p1_bed100")
     df_rest_seg_p1_bed100 = df_rest_seg_p1_bed100.fillna(0.0)
 
@@ -135,7 +136,7 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
         # .withColumnRenamed("sum(其它)", "其它_p1_other") \
         # .withColumnRenamed("sum(Est_DrugIncome_RMB)", "Est_DrugIncome_RMB_p1_other").fillna(0.0)
 
-    df_rest_seg_p1 = df_EIA_res_rest.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
+    df_rest_seg_p1 = df_rest_seg_p1.groupBy("scen_id", "Date").sum(*[p for p in prd_input]+["other","Est_DrugIncome_RMB"])
     df_rest_seg_p1 = udf_rename(df_rest_seg_p1, [p for p in prd_input]+["other","Est_DrugIncome_RMB"],"_p1_other")
     df_rest_seg_p1 = df_rest_seg_p1.fillna(0.0)
 

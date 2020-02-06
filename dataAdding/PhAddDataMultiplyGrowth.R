@@ -32,14 +32,19 @@ cal_seed_with_gr <- function(df, y, years,all_gr_index){
                                    base_index - 1)
         )
     
+    total_gr = 1
     
     for(i in all_gr_index) {
         df[[i]] <- ifelse((df$min_index > i) |
                               (df$max_index < i), 1, df[[i]])
         df[[i]] <- ifelse(df$Year > y, df[[i]] ^ (-1), df[[i]])
-        df$Sales <- df$Sales * df[[i]]
-        df$Units <- df$Units * df[[i]]
+        # df$Sales <- df$Sales * df[[i]]
+        # df$Units <- df$Units * df[[i]]
+        total_gr = total_gr * df[[i]]
     }
+    df$Sales <- df$Sales * min(total_gr,2)
+    df$Units <- df$Units * min(total_gr,2)
+    
     df$Year <- y
     #print(head(df))
     return(df)

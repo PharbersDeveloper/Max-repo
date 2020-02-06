@@ -4,6 +4,7 @@ from pyspark.sql import functions as func
 from phOutlierParameters import prd_input, sql_content
 from phRename import udf_rename
 from phNewMultiColumns import udf_new_columns
+from phColumnsAdding import sum_columns
 
 def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
                                   df_panel, ct, scen,

@@ -4,8 +4,9 @@ import pandas as pd
 
 
 def max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city):
-    df_panel_hos = df_uni.where(df_uni.PANEL == 1).select("HOSP_ID")
-    df_pnl = df_EIA.join(df_hos_city, df_EIA.HOSP_ID == df_hos_city.Panel_ID, how="left")
+    df_panel_hos = df_uni.where(df_uni.PANEL == 1).select("HOSP_ID").withColumnRenamed("HOSP_ID", "HOSP_ID1")
+    df_pnl = df_EIA.join(df_hos_city, df_EIA.HOSP_ID == df_hos_city.Panel_ID, how="left").\
+        join(df_panel_hos, df_EIA.HOSP_ID == df_panel_hos.HOSP_ID1, how="right")
     # df_pnl.show()
 
     df_pnl = df_pnl.groupBy(["City", "POI"]).sum("Sales").withColumnRenamed("sum(Sales)", "Sales")

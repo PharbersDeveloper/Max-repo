@@ -19,7 +19,7 @@ from phOutlierParameters import prd_input
 '''
 
 
-def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max=1, smpl_max=1):
+def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max = 1,smpl_max = 1):
     for ct in cities:
         # 通过Seg来过滤数据
         df_seg_city_iter = df_seg_city.where(df_seg_city.City == ct).select("Seg").distinct()
