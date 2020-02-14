@@ -7,7 +7,7 @@ from phOutlierParameters import prd_input,tmp_df_factor_result_path
 
 def max_outlier_factor_inner_loop_old(spark, rlt_scs, df_rlt, fst_prd, bias, index):
     for isc in rlt_scs:
-        rltsc = df_rlt[df_rlt.scen_id == isc].fillna(0.0)
+        rltsc = df_rlt[df_rlt["scen_id"]==isc].reset_index(drop=False).fillna(0)
         #df_rlt_sc.show()
         # 一个线下算法库，没有替代品的情况下线下计算
         # rltsc = df_rlt_sc.toPandas()
