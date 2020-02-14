@@ -2,7 +2,7 @@
 from pyspark.sql.types import *
 import numpy as np
 from cvxpy import *
-from phOutlierParameters import prd_input
+from phOutlierParameters import prd_input,tmp_df_factor_result_path
 
 # 调试Factor 流程
 '''
@@ -13,24 +13,25 @@ from phOutlierParameters import prd_input
 
 def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
     #prd_input = [u"加罗宁", u"凯纷", u"诺扬"]
-    schema = StructType([
-        StructField("city", StringType(), True),
-        StructField("poi", StringType(), True),
-        StructField("scen_id", IntegerType(), True),
-        StructField("share", DoubleType(), True),
-        StructField("num_ot", DoubleType(), True),
-        StructField("vol_ot", DoubleType(), True),
-        StructField("poi_vol", DoubleType(), True),
-        StructField("mkt_vol", DoubleType(), True),
-        StructField("scen", StringType(), True),
-        StructField("sales_pnl", DoubleType(), True),
-        StructField("sales_pnl_mkt", DoubleType(), True),
-        StructField("ims_share", DoubleType(), True),
-        StructField("ims_poi_vol", DoubleType(), True),
-        StructField("ims_mkt_vol", DoubleType(), True),
-        StructField("factor", DoubleType(), True),
-    ])
-    df_factor_result = spark.createDataFrame([], schema)
+    # schema = StructType([
+    #     StructField("city", StringType(), True),
+    #     StructField("poi", StringType(), True),
+    #     StructField("scen_id", IntegerType(), True),
+    #     StructField("share", DoubleType(), True),
+    #     StructField("num_ot", DoubleType(), True),
+    #     StructField("vol_ot", DoubleType(), True),
+    #     StructField("poi_vol", DoubleType(), True),
+    #     StructField("mkt_vol", DoubleType(), True),
+    #     StructField("scen", StringType(), True),
+    #     StructField("sales_pnl", DoubleType(), True),
+    #     StructField("sales_pnl_mkt", DoubleType(), True),
+    #     StructField("ims_share", DoubleType(), True),
+    #     StructField("ims_poi_vol", DoubleType(), True),
+    #     StructField("ims_mkt_vol", DoubleType(), True),
+    #     StructField("factor", DoubleType(), True),
+    # ])
+    # df_factor_result = spark.createDataFrame([], schema)
+    index = 0
     for ct in cities:
         print (u"正在进行 %s factor的计算" % ct)
         df_rlt = df_result.where(df_result.city == ct)
@@ -68,13 +69,26 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
             for i in range(len(rltsc)):
                 rltsc["scen"][i] = ",".join(rltsc["scen"][i])
 
-            #rltsc["scen"] = ",".join(rltsc["scen"])
-
             df_tmp = spark.createDataFrame(rltsc)
-            df_factor_result = df_factor_result.union(df_tmp)
+
+            #rltsc["scen"] = ",".join(rltsc["scen"])
+            print index
+            if(index == 0):
+                df_tmp.write.format("parquet") \
+                    .mode("overwrite").save(tmp_df_factor_result_path)
+            else:
+                df_tmp.write.format("parquet") \
+                    .mode("append").save(tmp_df_factor_result_path)
+                #df_result_all = df_result_all.union(df_result)
+            index = index + 1
+
+
+
+
+            #df_factor_result = df_factor_result.union(df_tmp)
 
         print (u"已完成 %s factor的计算" % ct)
-
+    df_factor_result = spark.read.parquet(tmp_df_factor_result_path)
     df_factor_result = df_factor_result.withColumn("poi_tmp",
                                                    ((df_factor_result.poi_vol - df_factor_result.sales_pnl) *
                                                     df_factor_result.factor + df_factor_result.sales_pnl)) \

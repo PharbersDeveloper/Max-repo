@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-doi = u"SNY8"
+doi = u"SNY11"
 
 cities = [u"长春市", \
           u"北京市", \
@@ -43,16 +43,20 @@ pnl_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/panel-re
 ims_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/ims_info/"+doi+"_ims_info_1901-1911"
 df_factor_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_factor_result"
 df_rlt_brf_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_rlt_brf"
+tmp_df_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_result"
+tmp_df_factor_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_factor_result"
 
-prd_input = [u"波立维", u"倍林达", u"泰嘉"]
+
+
+prd_input = [u"安博诺", u"倍博特", u"复代文"]
 prod=dict([(prd_input[p],"prd"+str(p)) for p in range(len(prd_input))])
 sql_content = '''select `mkt_vol`,
-                     stack(3, '波立维', `波立维`, '倍林达', `倍林达`, '泰嘉', `泰嘉`) as (`poi`, `poi_vol` )
+                     stack(3, '安博诺', `安博诺`, '倍博特', `倍博特`, '复代文', `复代文`) as (`poi`, `poi_vol` )
                      from  v_pivot             
                   '''
 
 sql_content2 = '''select `mkt_vol`, `scen_id`, `scen`, `city`, `num_ot`, `vol_ot`,
-                 stack(3, '波立维', `波立维`, '倍林达', `倍林达`, '泰嘉', `泰嘉`) as (`poi`, `poi_vol` )
+                 stack(3, '安博诺', `安博诺`, '倍博特', `倍博特`, '复代文', `复代文`) as (`poi`, `poi_vol` )
                  from  v_pivot
               '''
 

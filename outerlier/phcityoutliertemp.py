@@ -9,7 +9,7 @@ from phCalMktUdf import cal_mkt
 from phscenot import max_outlier_seg_scen_ot_spark
 from phscenot2 import max_outlier_seg_scen_ot_spark_2
 from phsegwoot import max_outlier_seg_wo_ot_spark, max_outlier_seg_wo_ot_old
-from phOutlierParameters import prd_input
+from phOutlierParameters import prd_input, tmp_df_result_path
 
 '''
     @num_ot_max: 为每个城市选择outlier的数量上限
@@ -140,9 +140,14 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         # 2. 利用流式数据，将所有见过append到一个文件中，两种都是可以的
 
         if(index == 0):
-            df_result_all = df_result
+            #df_result_all = df_result
+            df_result.write.format("parquet") \
+                .mode("overwrite").save(tmp_df_result_path)
         else:
-            df_result_all = df_result_all.union(df_result)
+            df_result.write.format("parquet") \
+                .mode("append").save(tmp_df_result_path)
+            #df_result_all = df_result_all.union(df_result)
         index = index + 1
-        df_result.show()
+        #df_result.show()
+    df_result_all = spark.read.parquet(tmp_df_result_path)
     return df_result_all
