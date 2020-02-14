@@ -131,6 +131,14 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         df_result = max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
                                                   df_panel, ct, scen,
                                                   ot_seg, other_seg_poi, other_seg_oth)
+        
+        # TODO: 这个地方这样写可能会有大量的内存压力，
+        # 因为你不知道数据是不是在计算其他数据的过程中已经被释放掉啦内存，
+        # 因此会造成大量的重复计算
+        # 正确的写法有两种：
+        # 1. 每一个城市生成一个固定路径的中间零时文件，最后将零时文件整合成一个文件
+        # 2. 利用流式数据，将所有见过append到一个文件中，两种都是可以的
+
         if(index == 0):
             df_result_all = df_result
         else:
