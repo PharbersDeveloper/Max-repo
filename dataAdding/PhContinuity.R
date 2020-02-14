@@ -31,12 +31,16 @@ cal_continuity <- function(raw_data){
     con <- repartition(con, 2L, con$PHA)
     
     printSchema(con)
-    con_schema <- structType(
-        structField("PHA", "string"),
-        structField("Year_2018", "double"),
-        structField("Year_2019", "double")#,
-        #structField("Count", "double")
-    )
+    # con_schema <- structType(
+    #     structField("PHA", "string"),
+    #     structField("Year_2018", "double"),
+    #     structField("Year_2019", "double")#,
+    #     #structField("Count", "double")
+    # )
+    
+    years <- unique(as.data.frame(con)$Year) %>% sort()
+    con_schema <- multi_struct_fileds(c('PHA', paste0("Year_", years)),
+                                      c("string", rep("double", length(years))))
     
     con <- 
         dapply(con,
@@ -50,11 +54,11 @@ cal_continuity <- function(raw_data){
         )
     print(head(con))
     con <- con %>% 
-        mutate(total=con$Year_2018+con$Year_2019,
+        mutate(total=sum_multi_columns(con, paste0("Year_", years)),
                PHA = con$PHA) %>% 
         drop(c('Count'))
     
-    con <- min_max(con, c('Year_2018','Year_2019'))
+    con <- min_max(con, paste0("Year_", years))
     
     print(head(con))
     

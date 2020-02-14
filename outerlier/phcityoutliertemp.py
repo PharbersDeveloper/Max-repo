@@ -19,8 +19,22 @@ from phOutlierParameters import prd_input
 '''
 
 
-def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max = 1,smpl_max = 1):
+def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_ot_max = 8,smpl_max = 8):
+    # schema = StructType([
+    #     StructField("poi", StringType(), True),
+    #     StructField("scen_id", IntegerType(), True),
+    #     StructField("share", DoubleType(), True),
+    #     StructField("num_ot", DoubleType(), True),
+    #     StructField("vol_ot", DoubleType(), True),
+    #     StructField("poi_vol", DoubleType(), True),
+    #     StructField("mkt_vol", DoubleType(), True),
+    #     StructField("scen", StringType(), True),
+    #     StructField("city", StringType(), True)
+    # ])
+    # df_result_all = spark.createDataFrame([], schema)
+    index = 0
     for ct in cities:
+        print(ct)
         # 通过Seg来过滤数据
         df_seg_city_iter = df_seg_city.where(df_seg_city.City == ct).select("Seg").distinct()
         df_EIA_res_iter = df_EIA_res.join(df_seg_city_iter, on=["Seg"], how="inner")
@@ -72,13 +86,13 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
                 # print u"珠福特殊条件"
                 df_tmp = df_EIA_res_iter.where(
                     (df_EIA_res_iter.HOSP_ID.isin(cd_arr[ot_seg])) &
-                    (df_EIA_res_iter.Date == 201801) &
+                    (df_EIA_res_iter.Date == 201901) &
                     (df_EIA_res_iter.City == ct)
                 )
             else:
                 df_tmp = df_EIA_res_iter.where(
                     (df_EIA_res_iter.HOSP_ID.isin(cd_arr[ot_seg])) &
-                    (df_EIA_res_iter.Date == 201801)
+                    (df_EIA_res_iter.Date == 201901)
                 )
 
             smpl = df_tmp.orderBy(df_tmp.Est_DrugIncome_RMB.desc()) \
@@ -117,6 +131,10 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         df_result = max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
                                                   df_panel, ct, scen,
                                                   ot_seg, other_seg_poi, other_seg_oth)
-
-        # df_result.show()
-        return df_result
+        if(index == 0):
+            df_result_all = df_result
+        else:
+            df_result_all = df_result_all.union(df_result)
+        index = index + 1
+        df_result.show()
+    return df_result_all

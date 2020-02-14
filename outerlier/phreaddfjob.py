@@ -1,10 +1,14 @@
 # coding=utf-8
 from pyspark.sql import functions as func
-
+from phOutlierParameters import doi
 
 def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
     # 1. panel 数据处理
     df_EIA = spark.read.parquet(pnl_path)
+
+    ##此处注意
+    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900))
+
     df_EIA = df_EIA.withColumn("Year", func.bround(df_EIA.Date / 100))
 
     df_uni = spark.read.parquet(uni_path)

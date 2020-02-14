@@ -1,3 +1,4 @@
+from pyspark.sql import functions as func
 
 def udf_new_columns(df_oth_seg, list_prod, suffix = "", value = 0):
     for p in list_prod:

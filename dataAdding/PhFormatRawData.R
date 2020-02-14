@@ -1,11 +1,11 @@
 
-format_raw_data <- function(df){
+format_raw_data <- function(df, cpa_gyc = T){
     names(df)[names(df) %in% c('数量（支/片）', '最小制剂单位数量',
                                'total_units','SALES_QTY')] <- 'Units'
     names(df)[names(df) %in% c('金额（元）', '金额', 'sales_value__rmb_',
                                'SALES_VALUE')] <- 
         'Sales'
-    names(df)[names(df) %in% c('Yearmonth','YM')] <- 'year_month'
+    names(df)[names(df) %in% c('Yearmonth','YM', 'Date')] <- 'year_month'
     names(df)[names(df) %in% c('年', '年份','YEAR')] <- 'Year'
     names(df)[names(df) %in% c('月', '月份','MONTH')] <- 'Month'
     names(df)[names(df) %in% c('医院编码', 'BI_Code','HOSP_CODE')] <- 'ID'
@@ -27,6 +27,13 @@ format_raw_data <- function(df){
     names(df)[names(df) %in% c('城市','city_name','CITY_NAME')] <- 'City'
     names(df)[names(df) %in% c('PHA_ID_x','PHA_ID')] <- 'PHA'
     
+    
+    if(cpa_gyc){
+        coltypes(df)[which(names(df) %in%
+                               c("ID"))] <- "character"
+        df$ID = ifelse(length(df$ID) < 7, lpad(df$ID, 6, "0"),
+                       lpad(df$ID, 7, "0"))
+    }
     
     if(('year_month' %in% names(df))){
         coltypes(df)[which(names(df) %in%

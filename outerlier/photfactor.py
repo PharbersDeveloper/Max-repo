@@ -38,7 +38,7 @@ def max_outlier_factor(spark, df_result, cities, fst_prd=3, bias=2):
 
         for isc in rlt_scs:
             df_rlt_sc = df_rlt.where(df_rlt.scen_id == isc).fillna(0.0)
-            df_rlt_sc.show()
+            #df_rlt_sc.show()
             # 一个线下算法库，没有替代品的情况下线下计算
             rltsc = df_rlt_sc.toPandas()
             print (len(rltsc))

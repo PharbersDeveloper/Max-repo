@@ -38,6 +38,8 @@ spark.sparkContext.addPyFile("phSetSchema.py")
 spark.sparkContext.addPyFile("phOutlierParameters.py")
 spark.sparkContext.addPyFile("phRename.py")
 
+
+
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 
 '''
@@ -48,7 +50,7 @@ print prd_input
 [df_EIA_res, df_EIA] = max_outlier_poi_job(spark, df_EIA, prd_input)
 df_EIA_res.persist()
 df_EIA.persist()
-df_EIA_res.show()
+#df_EIA_res.show()
 # 处理universe join EIA
 df_EIA_res = max_outlier_eia_join_uni(spark, df_EIA_res, df_uni)
 # 对福建，厦门，泉州，珠江三角的调整需要
@@ -108,7 +110,7 @@ print('Took %f second' % (end_time - start_time))
 # df_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 [df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
 #
-# df_factor_result.write.format("parquet") \
-#     .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/factor_result")
-# df_rlt_brf.write.format("parquet") \
-#     .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/rlt_brf")
+df_factor_result.write.format("parquet") \
+    .mode("overwrite").save(df_factor_result_path)
+df_rlt_brf.write.format("parquet") \
+    .mode("overwrite").save(df_rlt_brf_path)

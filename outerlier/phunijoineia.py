@@ -10,7 +10,7 @@ def gen_date_with_year(year):
 
 
 def max_outlier_eia_join_uni(spark, df_EIA, df_uni):
-    arg_year = 2018
+    arg_year = 2019
     date = gen_date_with_year(arg_year)
     schema = StructType([StructField("key", IntegerType(), True), StructField("Date", IntegerType(), True)])
     date = spark.createDataFrame(date, schema)

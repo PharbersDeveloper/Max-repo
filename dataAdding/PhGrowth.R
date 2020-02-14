@@ -31,12 +31,17 @@ cal_growth <- function(raw_data, id_city, max_month = 12){
                       gr$Molecule,
                       gr$CITYGROUP)
     
-    con_schema <- structType(
-        structField("Molecule", "string"),
-        structField("CITYGROUP", "string"),
-        structField("Year_2018", "double"),
-        structField("Year_2019", "double")
-    )
+    # con_schema <- structType(
+    #     structField("Molecule", "string"),
+    #     structField("CITYGROUP", "string"),
+    #     structField("Year_2018", "double"),
+    #     structField("Year_2019", "double")
+    # )
+    years <- unique(as.data.frame(gr)$Year) %>% sort()
+    con_schema <- multi_struct_fileds(c('Molecule', 'CITYGROUP',
+                                        paste0("Year_", years)),
+                                      c("string", "string", 
+                                        rep("double", length(years))))
     
     gr <- 
         dapply(gr,
@@ -48,8 +53,9 @@ cal_growth <- function(raw_data, id_city, max_month = 12){
                    
                }, con_schema
         )
-    gr <- gr %>%
-        mutate(GR1819=gr$Year_2019/gr$Year_2018)
+    # gr <- gr %>%
+    #     mutate(GR1819=gr$Year_2019/gr$Year_2018)
+    gr <- add_gr_cols(gr, years)
     
     
     gr <- modify_gr(gr, names(gr)[startsWith(names(gr),'GR')])

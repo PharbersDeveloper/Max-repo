@@ -172,12 +172,13 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
     df_rest_poi_oth = udf_rename(df_rest_poi_oth, [p+"_fd" for p in prd_input]+["other_fd"],"_rest_poi")
 
 
-    df_EIA_res_cur_poi_ot.show()
+    #df_EIA_res_cur_poi_ot.show()
     df_result = df_EIA_res_cur_poi_ot.join(df_rest_poi_oth, on="scen_id", how="left")
     df_result = df_result.join(df_EIA_res_cur_vol_ot, on="scen_id", how="left")
     # df_result.show()
+    #None
+    other_seg_poi_sum = sum(filter(None, other_seg_poi.values()))
 
-    other_seg_poi_sum = sum(other_seg_poi.values())
     # df_result = df_result.withColumn("mkt_vol",
     #                                  df_result["加罗宁_rest_poi"] + df_result["凯纷_rest_poi"] +
     #                                  df_result["诺扬_rest_poi"] + df_result["oth_rest_oth"] +
@@ -218,6 +219,6 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
     df_result = spark.sql(sql_content2)
     df_result = df_result.withColumn("share", df_result.poi_vol / df_result.mkt_vol) \
         .select("poi", "scen_id", "share", "num_ot", "vol_ot", "poi_vol", "mkt_vol", "scen", "city")
-    df_result.show()
+    #df_result.show()
 
     return df_result

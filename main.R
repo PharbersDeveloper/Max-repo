@@ -39,51 +39,112 @@ source("dataAdding/PhCombindData.R", encoding = "UTF-8")
 source("dataAdding/PhAddDataNewHosp.R", encoding = "UTF-8")
 source('dataAdding/PhFormatRawData.R', encoding = 'UTF-8')
 source("panel/PhPanelGen.R", encoding = "UTF-8")
-source('dataAdding/PhCombindRawData.R')
-
+source('dataAdding/PhCombindRawData.R', encoding = 'UTF-8')
+source('dataAdding/PhParameters.R', encoding = 'UTF-8')
+source('dataAdding/PhAddGrCols.R', encoding = 'UTF-8')
+source('dataAdding/PhSetSchema.R', encoding = 'UTF-8')
+source('dataAdding/PhSumMultiCols.R', encoding = 'UTF-8')
 
 
 # 1. 首次补数
 
-uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
+#uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
 universe <- read_universe(uni_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
-if(F){
+if(T){
   cpa_pha_mapping <- map_cpa_pha(
-    "/common/projects/max/Janssen/MappingPha"
+    cpa_pha_mapping_path, universe
   )
+  # cpa_pha_mapping <- map_cpa_pha(
+  #   "/common/projects/max/Janssen/MappingPha"
+  # )
 }
 
 
 
 # 1.3 读取原始样本数据:
-if(F){
+if(T){
   raw_data <- read_raw_data(
-    "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+    raw_data_path,
     cpa_pha_mapping
   )
+  # raw_data <- read_raw_data(
+  #   "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+  #   cpa_pha_mapping
+  # )
   persist(raw_data, "MEMORY_ONLY")
 }
 
 
 
-raw_data <- sql("select * from CPA_Janssen where company = 'Janssen'")
-print(head(raw_data))
-raw_data <- format_raw_data(raw_data)
+if(F){
+  raw_data <- sql("select * from CPA_Janssen where company = 'Janssen'")
+  print(head(raw_data))
+  raw_data <- format_raw_data(raw_data)
+}
 
 # 1.4 计算样本医院连续性:
-con_all <- cal_continuity(raw_data)
+if(T){
+  con_all <- cal_continuity(raw_data)
+  con_dis <- con_all[[1]]
+  con <- con_all[[2]]
+}
 
-con <- con_all[[2]]
+if(F){
+  openxlsx::write.xlsx(collect(con), 
+                       continuity_path)
+}
 
 
 # 1.5 计算样本分子增长率:
-gr_all <- cal_growth(raw_data, id_city, max_month = 7)
-gr <- gr_all[[1]]
-gr_with_id <- gr_all[[2]]
+if(T){
+  #完整年
+  gr_all_p1 <- cal_growth(raw_data %>% 
+                         filter(!(raw_data$Year %in% year_missing)), 
+                       id_city)
+  gr_p1 <- gr_all_p1[[1]]
+  gr_with_id_p1 <- gr_all_p1[[2]]
+}
 
+if(T){
+  #不完整年
+  gr_all_p2 <- cal_growth(raw_data %>% 
+                         filter((raw_data$Year %in% 
+                                   c(year_missing, year_missing-1,
+                                     year_missing+1))), 
+                       id_city, max_month = 9)
+  gr_p2 <- gr_all_p2[[1]]
+  gr_with_id_p2 <- gr_all_p2[[2]]
+}
+
+
+if(F){
+  
+  gr_with_id <- distinct(select(gr_with_id_p1,
+                                'PHA', 'ID', 'Molecule', 'City', 'CITYGROUP')) %>%
+    rbind(distinct(select(gr_with_id_p2,
+                          'PHA', 'ID', 'Molecule', 'City', 'CITYGROUP')))
+  gr_with_id <- join(gr_with_id, gr_with_id_p1,
+                     gr_with_id$PHA == gr_with_id_p1$PHA &
+                       gr_with_id$ID == gr_with_id_p1$ID &
+                       gr_with_id$Molecule == gr_with_id_p1$Molecule,
+                     'left') %>% drop_dup_cols()
+  gr_with_id <- join(gr_with_id, gr_with_id_p2,
+                     gr_with_id$PHA == gr_with_id_p2$PHA &
+                       gr_with_id$ID == gr_with_id_p2$ID &
+                       gr_with_id$Molecule == gr_with_id_p2$Molecule,
+                     'left') %>% drop_dup_cols()
+  gr_col_index <- which(grepl('GR1', names(gr_with_id)))
+  gr_with_id <- gr_with_id[,c(setdiff(1:length(names(gr_with_id)), gr_col_index),
+                              gr_col_index)]
+  
+  if(F){
+    openxlsx::write.xlsx(collect(gr_with_id), 
+                         gr_path)
+  }
+}
 
 # 1.6 原始数据格式整理:
 seed <- trans_raw_data_for_adding(raw_data, id_city, gr_with_id)
@@ -103,10 +164,13 @@ raw_data_adding <- repartition(raw_data_adding, 2L)
 
 
 ##好神奇，写出去再读进来，driver机就不会内存溢出了
-if(F){
-  raw_data_adding_path <- "/common/projects/max/Janssen/raw_data_adding"
+if(T){
+  
   write.parquet(raw_data_adding, raw_data_adding_path, mode = "overwrite")
   raw_data_adding <- read.df(raw_data_adding_path, "parquet")
+  
+  write.parquet(original_range, original_range_path, mode = "overwrite")
+  original_range <- read.df(original_range_path, "parquet")
   
 }
 
@@ -125,6 +189,12 @@ adding_data_new <- add_data_new_hosp(raw_data_adding, original_range)
 
 
 # 1.11 输出补数结果:
+if(T){
+  
+  write.parquet(adding_data_new, adding_data_new_path, mode = "overwrite")
+  adding_data_new <- read.df(adding_data_new_path, "parquet")
+  
+}
 # print(head(adding_data_new))
 # print(count(adding_data_new))
 #write.parquet(adding_data_new, "\\Map-repo\\adding_data_result", mode = "overwrite")
@@ -143,11 +213,23 @@ print(head(chk))
 panel <-
   cal_max_data_panel(
     uni_path,
-    mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-    map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-    c_month = "1908",
-    add_data = adding_data_new
+    mkt_path,
+    map_path,
+    c_month,
+    add_data = adding_data_new,
+    min_content,
+    need_cleaning_cols
   )
 
-write.df(panel, "/common/projects/max/Janssen/panel-result_Zytiga_201801-201908", 
+write.df(panel, panel_path, 
          "parquet", "overwrite")
+
+
+if(F){
+  panel = read.df(panel_path, "parquet")
+  # panel = panel %>% filter(panel$Date>201900)
+  # panel_local <- collect(panel)
+  # write.csv(panel_local, 
+  #                      panel_path_local,
+  #           row.names = F)
+}

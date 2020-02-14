@@ -51,13 +51,13 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
             .sum(*prd_input)
         df_poi_ot = udf_rename(df_poi_ot, prd_input).fillna(0.0)
 
-        df_poi_ot.show()
+        #df_poi_ot.show()
 
         df_oth_ot = df_EIA_res_cur_ct_b100 \
             .where(df_EIA_res_cur_ct_b100.HOSP_ID.isin(condi)).groupBy() \
             .sum("other") \
             .withColumnRenamed("sum(other)", "other").fillna(0.0)
-        df_oth_ot.show()
+        #df_oth_ot.show()
 
         df_EIA_res_rest = df_EIA_res_cur.where(~df_EIA_res_cur.HOSP_ID.isin(condi))
         df_EIA_res_rest_panel = df_EIA_res_rest.where(df_EIA_res_rest.PANEL == 1)
@@ -201,7 +201,7 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
                                              df_result[p]+func.lit(other_seg_poi[p]))
 
         df_result = df_result.select(*prd_input+ ["mkt_vol"])
-        df_result.show()
+        #df_result.show()
 
         df_result.createOrReplaceTempView('v_pivot')
         # sql_content = '''select `mkt_vol`,
@@ -218,10 +218,10 @@ def max_outlier_seg_scen_ot_spark(spark, df_EIA_res_cur,
             .withColumn("city", func.lit(ct)) \
             .select("poi", "scen_id", "share", "num_ot", "vol_ot", "poi_vol", "mkt_vol", "scen", "city")
 
-        df_result.show()
-        df_result.write.format("parquet") \
-            .mode("append").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result1")
-        # df_scen_result = df_scen_result.union(df_result)
+        #df_result.show()
+        # df_result.write.format("parquet") \
+        #     .mode("append").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result1")
+        df_scen_result = df_scen_result.union(df_result)
 
-    df_scen_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result1")
+    #df_scen_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result1")
     return df_scen_result
