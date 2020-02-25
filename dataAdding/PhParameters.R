@@ -1,6 +1,7 @@
 
 #原始数据
-raw_data_path <- "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/简单整合的az201701-201909_sanofi201801-201911原始数据_去重版"
+raw_data_path <- 
+    "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/简单整合的az201701-201909_sanofi201801-201911原始数据_去重版_20200210"
 
 #universe
 #uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/universe_az_sanofi_2spec"
@@ -21,7 +22,7 @@ c_month = "1701-1911"
 year_missing = c(2019)
 
 #缺失年份的月份数
-max_month = 9
+max_month = 11
 
 #待清洗文件输出路径
 need_cleaning_path = 
@@ -43,9 +44,12 @@ adding_data_new_path <- "/common/projects/max/AZ_Sanofi/adding_data_new"
 
 #panel路径
 panel_path <- paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-201911_20200212")
-#panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1910','/panel',Sys.Date(),'.csv')
+# panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
+#                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 
-
+std_names <- c('PHA','ID','Year','Month','Molecule','Brand','Form',
+               'Specifications','Pack_Number','Manufacturer','Sales','Units',
+               'Province', 'City', 'Corp', 'Route')
 
 #时间范围路径
 original_range_path <- paste0("/common/projects/max/AZ_Sanofi/original_range")

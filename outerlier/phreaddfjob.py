@@ -7,7 +7,7 @@ def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
     df_EIA = spark.read.parquet(pnl_path)
 
     ##此处注意
-    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900))
+    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 201912))
 
     df_EIA = df_EIA.withColumn("Year", func.bround(df_EIA.Date / 100))
 
