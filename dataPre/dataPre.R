@@ -27,7 +27,12 @@ cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
         print(step * index + step)
         tmp <- map[(step * index + 1) : (step * index + step), ]
         tmpDf <- createDataFrame(tmp)
-        write.parquet(tmpDf, dest, mode = "append")
+        if(index == 0){
+            write.parquet(tmpDf, dest, mode = "overwrite")
+        }else{
+            write.parquet(tmpDf, dest, mode = "append")
+        }
+        
         index <- index + 1
     }
     print(step * floor(round) + 1)

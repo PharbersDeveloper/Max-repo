@@ -38,7 +38,7 @@ spark.sparkContext.addPyFile("phSetSchema.py")
 spark.sparkContext.addPyFile("phOutlierParameters.py")
 spark.sparkContext.addPyFile("phRename.py")
 
-
+print doi
 
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 
@@ -88,6 +88,8 @@ start_time = time.time()  # 记录程序开始运行时间
 
 df_result = max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities)
 df_result.show()
+
+# df_result = spark.read.parquet(tmp_df_result_path)
 
 df_pnl = df_pnl.withColumnRenamed("City", "city") \
     .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt") \

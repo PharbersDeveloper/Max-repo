@@ -1,8 +1,7 @@
 
 
-group_panel_by_seg <- function(panel_path, uni_ot, uni){
-    panel <- read.df(panel_path,
-                     'parquet')
+group_panel_by_seg <- function(panel, uni_ot, uni){
+    
     
     uni_panel_all <- select(uni %>% filter(uni$PANEL == 1), 
                             'PHA', 'BEDSIZE', 'PANEL', 'Seg')

@@ -1,5 +1,5 @@
 
-format_raw_data <- function(df, cpa_gyc = T){
+format_raw_data <- function(df, std_names, cpa_gyc = T){
     names(df)[names(df) %in% c('数量（支/片）', '最小制剂单位数量',
                                'total_units','SALES_QTY')] <- 'Units'
     names(df)[names(df) %in% c('金额（元）', '金额', 'sales_value__rmb_',
@@ -67,9 +67,7 @@ format_raw_data <- function(df, cpa_gyc = T){
     coltypes(df)[which(names(df) %in%
                                  c("Month"))] <- "integer"
     
-    std_names <- c('PHA','ID','Year','Month','Molecule','Brand','Form',
-                   'Specifications','Pack_Number','Manufacturer','Sales','Units',
-                   'Province', 'City')
+    
     
     df_m <- df[,std_names]
     

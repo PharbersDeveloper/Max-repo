@@ -75,6 +75,6 @@ add_data_new_hosp <- function(raw_data_adding, original_range){
     raw_data_adding <- rbind(raw_data_adding[,same_names], 
                              adding_data_new[,same_names])
     
-    return(raw_data_adding)
+    return(list(raw_data_adding, new_hospital))
 }
 
