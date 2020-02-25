@@ -1,17 +1,17 @@
 
 cal_continuity <- function(raw_data){
     
-    con <- distinct(select(raw_data,'Year','Month','新版ID'))
+    con <- distinct(select(raw_data,'Year','Month','PHA'))
     
-    con <- count(groupBy(con, '新版ID', 'Year'))
+    con <- count(groupBy(con, 'PHA', 'Year'))
     
-    con_whole_year <- agg(group_by(con,'新版ID'),
+    con_whole_year <- agg(group_by(con,'PHA'),
                          MAX=max(con$count),
                          MIN=min(con$count))
     
     #drop_dup_cols()的定义在dataAdding/PhDropDupCols.R
     con_dis <- join(con, con_whole_year, 
-                    con$新版ID==con_whole_year$新版ID, 'left') %>%
+                    con$PHA==con_whole_year$PHA, 'left') %>%
         drop_dup_cols()
     
     
@@ -23,21 +23,24 @@ cal_continuity <- function(raw_data){
     
     distribution <-
         count(group_by(distinct(select(
-            con_dis, 'MAX', 'MIN', '新版ID'
+            con_dis, 'MAX', 'MIN', 'PHA'
         )),
         'MAX', 'MIN'))
-    
+    #coltypes(con)[which(names(con) %in% 'count')] <- 'double'
  
-    con <- repartition(con, 2L, con$新版ID)
+    con <- repartition(con, 2L, con$PHA)
     
     printSchema(con)
-    con_schema <- structType(
-        structField("新版ID", "string"),
-        structField("Year_2017", "double"),
-        structField("Year_2018", "double"),
-        structField("Year_2019", "double"),
-        structField("Count", "double")
-    )
+    # con_schema <- structType(
+    #     structField("PHA", "string"),
+    #     structField("Year_2018", "double"),
+    #     structField("Year_2019", "double")#,
+    #     #structField("Count", "double")
+    # )
+    
+    years <- unique(as.data.frame(con)$Year) %>% sort()
+    con_schema <- multi_struct_fileds(c('PHA', paste0("Year_", years)),
+                                      c("string", rep("double", length(years))))
     
     con <- 
         dapply(con,
@@ -49,17 +52,13 @@ cal_continuity <- function(raw_data){
                 
             }, con_schema
         )
-    
+    print(head(con))
     con <- con %>% 
-        mutate(total=con$Year_2017+con$Year_2018+con$Year_2019,
-               PHA = con$新版ID, 
-               min = 
-                   min_max(con, 
-                           c('Year_2017','Year_2018','Year_2019'))[[1]],
-               max = 
-                   min_max(con, 
-                           c('Year_2017','Year_2018','Year_2019'))[[2]]) %>% 
-        drop(c('Count','新版ID'))
+        mutate(total=sum_multi_columns(con, paste0("Year_", years)),
+               PHA = con$PHA) %>% 
+        drop(c('Count'))
+    
+    con <- min_max(con, paste0("Year_", years))
     
     print(head(con))
     
