@@ -5,12 +5,20 @@ source('maxCal/PhPanelBySeg.R', encoding = "UTF-8")
 source('maxCal/PhCombindUniverseAndFactor.R', encoding = "UTF-8")
 source('maxCal/PhRemoveNegativeValue.R', encoding = "UTF-8")
 
-mkt <- 'AZ8'
+mkt <- 'SNY1'
 time_l <- 201701
 time_r <- 201911
 time <- paste(time_l, time_r, sep = '-')
 
-uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_base')
+
+if(mkt %in% c('SNY6','SNY10','SNY12','SNY13')){
+    uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_onc')
+}else if(mkt %in% c('SNY5', 'SNY9', 'AZ11')){
+    uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_mch')
+}else{
+    uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_base')
+}
+
 
 
 uni_ot_path <- paste0('/common/projects/max/AZ_Sanofi/universe/universe_ot_', mkt)
@@ -90,9 +98,9 @@ max <- rbind(max, panel)
 write.df(max, paste0("/common/projects/max/AZ_Sanofi/MAX_result/AZ_Sanofi_MAX_result_",
                      time, mkt, "_hosp_level"), 
          "parquet", "overwrite")
-if(F){
-    max <- read.df(paste0("/common/projects/max/AZ_Sanofi/MAX_result/AZ_Sanofi_MAX_result_",
-                          time, mkt, "_hosp_level"), "parquet")
+if(T){
+    # max <- read.df(paste0("/common/projects/max/AZ_Sanofi/MAX_result/AZ_Sanofi_MAX_result_",
+    #                       time, mkt, "_hosp_level"), "parquet")
     max_c <- max %>% filter(max$BEDSIZE > 99)
     max_c <- group_by(max_c, 'Province', 'City', 'PANEL',"Prod_Name", 'Date') %>%
         agg(Predict_Sales = sum(max_c$Predict_Sales),

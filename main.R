@@ -140,47 +140,47 @@ if(F){
                gr$CITYGROUP == gr_p2$CITYGROUP,
              'left') %>% drop_dup_cols()
   print(nrow(gr))
-  gr_with_id <- distinct(rbind(gr_with_id_p1[,
-                                             c("PHA",'ID',
-                                               'City','CITYGROUP',
-                                               'Molecule',
-                                               'S_Molecule')],
-                               gr_with_id_p2[,
-                                             c("PHA",'ID',
-                                               'City','CITYGROUP',
-                                               'Molecule',
-                                               'S_Molecule')]))
-  print(nrow(gr_with_id))
-
-  gr_with_id <- 
-    join(gr_with_id, 
-         gr_with_id_p1[,
-                       names(gr_with_id_p1)[!startsWith(names(gr_with_id_p1), 'GR')]],
-         gr_with_id$PHA == gr_with_id_p1$PHA &
-           gr_with_id$ID == gr_with_id_p1$ID &
-         gr_with_id$Molecule == gr_with_id_p1$Molecule,
-         'left') %>%
-    drop_dup_cols()
-  print(nrow(gr_with_id))
-  gr_with_id <- 
-    join(gr_with_id, 
-         gr_with_id_p2[,
-                       names(gr_with_id_p2)[!startsWith(names(gr_with_id_p2), 'GR')]],
-         gr_with_id$PHA == gr_with_id_p2$PHA &
-           gr_with_id$ID == gr_with_id_p2$ID &
-         gr_with_id$Molecule == gr_with_id_p2$Molecule,
-         'left') %>%
-    drop_dup_cols()
-  gr_with_id <- 
-    join(gr_with_id, 
-         gr,
-         gr_with_id$CITYGROUP == gr$CITYGROUP &
-           gr_with_id$S_Molecule == gr$S_Molecule,
-         'left') %>%
-    drop_dup_cols()
-  print(nrow(gr_with_id))
-  openxlsx::write.xlsx(collect(gr_with_id), 
-                       gr_path)
+  # gr_with_id <- distinct(rbind(gr_with_id_p1[,
+  #                                            c("PHA",'ID',
+  #                                              'City','CITYGROUP',
+  #                                              'Molecule',
+  #                                              'S_Molecule')],
+  #                              gr_with_id_p2[,
+  #                                            c("PHA",'ID',
+  #                                              'City','CITYGROUP',
+  #                                              'Molecule',
+  #                                              'S_Molecule')]))
+  # print(nrow(gr_with_id))
+  # 
+  # gr_with_id <- 
+  #   join(gr_with_id, 
+  #        gr_with_id_p1[,
+  #                      names(gr_with_id_p1)[!startsWith(names(gr_with_id_p1), 'GR')]],
+  #        gr_with_id$PHA == gr_with_id_p1$PHA &
+  #          gr_with_id$ID == gr_with_id_p1$ID &
+  #        gr_with_id$Molecule == gr_with_id_p1$Molecule,
+  #        'left') %>%
+  #   drop_dup_cols()
+  # print(nrow(gr_with_id))
+  # gr_with_id <- 
+  #   join(gr_with_id, 
+  #        gr_with_id_p2[,
+  #                      names(gr_with_id_p2)[!startsWith(names(gr_with_id_p2), 'GR')]],
+  #        gr_with_id$PHA == gr_with_id_p2$PHA &
+  #          gr_with_id$ID == gr_with_id_p2$ID &
+  #        gr_with_id$Molecule == gr_with_id_p2$Molecule,
+  #        'left') %>%
+  #   drop_dup_cols()
+  # gr_with_id <- 
+  #   join(gr_with_id, 
+  #        gr,
+  #        gr_with_id$CITYGROUP == gr$CITYGROUP &
+  #          gr_with_id$S_Molecule == gr$S_Molecule,
+  #        'left') %>%
+  #   drop_dup_cols()
+  # print(nrow(gr_with_id))
+  # openxlsx::write.xlsx(collect(gr_with_id), 
+  #                      gr_path)
 }
 
 # 1.6 原始数据格式整理:
@@ -261,6 +261,50 @@ panel <-
   )
 
 if(F){
+  kct <- c('北京市',
+           '长春市',
+           '长沙市',
+           '常州市',
+           '成都市',
+           '重庆市',
+           '大连市',
+           '福厦泉市',
+           '广州市',
+           '贵阳市',
+           '杭州市',
+           '哈尔滨市',
+           '济南市',
+           '昆明市',
+           '兰州市',
+           '南昌市',
+           '南京市',
+           '南宁市',
+           '宁波市',
+           '珠三角市',
+           '青岛市',
+           '上海市',
+           '沈阳市',
+           '深圳市',
+           '石家庄市',
+           '苏州市',
+           '太原市',
+           '天津市',
+           '温州市',
+           '武汉市',
+           '乌鲁木齐市',
+           '无锡市',
+           '西安市',
+           '徐州市',
+           '郑州市',
+           '合肥市',
+           '呼和浩特市',
+           '福州市',
+           '厦门市',
+           '泉州市',
+           '珠海市',
+           '东莞市',
+           '佛山市',
+           '中山市')
   original_ym_molecule <- distinct(select(panel %>% filter(panel$add_flag == 0), 
                                           'Date','Molecule'))
   panel <- panel %>% join(original_ym_molecule, panel$Date == original_ym_molecule$Date &
@@ -282,7 +326,9 @@ if(F){
   )) & !(panel$add_flag == 1 & panel$Province %in% c(
     '河北省',"福建省"
   )) & !(panel$add_flag == 1 & panel$Date > 201900) &
-    !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital)))
+    !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital)) &
+    !(panel$add_flag == 1 & !(panel$City %in% kct) & 
+        panel$Molecule %in% c('奥希替尼')))
   head(agg(group_by(panel,'add_flag'), a= count(panel$add_flag)))
   head(agg(groupBy(
     panel,
@@ -306,20 +352,37 @@ if(F){
   panel = read.df(panel_path, "parquet")
   # panel = panel %>% filter(panel$Date>201900)
   #panel_c <- filter(panel, panel$Date>201900)
+  
+  
   panel_c <- panel %>%
     group_by('ID', 'Date', 'DOI', 'Hosp_name', 'HOSP_ID', 'Province', 'City', 
              'add_flag') %>%
     summarize(Sales = sum(panel$Sales),
               Units = sum(panel$Units))
   panel_c <- collect(panel_c)
+  
+  panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
+                             '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
   write.csv(panel_c, panel_path_local, row.names = F)
   
-  panel_c <- filter(panel, panel$Date>201900)
+  
+  
+  panel_c <- filter(panel, panel$Date>201900 &
+                      panel$Date<201912)
   panel_c <- panel_c %>%
     group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag') %>%
-    summarize(sales2019 = sum(panel_c$Sales))
+    summarize(sales201911YTD = sum(panel_c$Sales))
   panel_c <- collect(panel_c)
   openxlsx::write.xlsx(panel_c, 
-                       "Y:/MAX/AZ/UPDATE/1912/panel_without_hosp_2019_2020-02-25.xlsx")
+                       paste0("Y:/MAX/AZ/UPDATE/1912/panel_without_hosp_201911YTD_",
+                              Sys.Date(),".xlsx"))
+  
+  panel_c <- panel_c %>%
+    group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag','Province','City') %>%
+    summarize(sales201911YTD = sum(panel_c$Sales),
+              units201911YTD = sum(panel_c$Units))
+  panel_c <- collect(panel_c)
+  openxlsx::write.xlsx(panel_c, 
+                       paste0("w:/LJX_Backup/提数/202003/tmp.xlsx"))
   
 }
