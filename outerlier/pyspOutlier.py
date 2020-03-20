@@ -21,6 +21,10 @@ from phunijoineia import max_outlier_eia_join_uni
 spark = SparkSession.builder \
     .master("yarn") \
     .appName("sparkOutlier") \
+    .config("spark.driver.memory", "2g") \
+    .config("spark.executor.cores", "1") \
+    .config("spark.executor.instance", "2") \
+    .config("spark.executor.memory", "2g") \
     .getOrCreate()
 
 spark.sparkContext.addPyFile("phreaddfjob.py")
@@ -112,6 +116,7 @@ print('Took %f second' % (end_time - start_time))
 # df_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 [df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
 #
+
 df_factor_result.write.format("parquet") \
     .mode("overwrite").save(df_factor_result_path)
 df_rlt_brf.write.format("parquet") \
