@@ -1,101 +1,52 @@
-# Max-repo
-print("start max job")
-library(SparkR)
-library(magrittr)
-# library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
-# library(uuid)
-library(BPRSparkCalCommon)
-library(styler)
-# library(RKafkaProxy)
-
-cmd_args <- commandArgs(T)
-
-Sys.setenv(SPARK_HOME = "D:/tools/spark-2.3.0-bin-hadoop2.7")
-Sys.setenv(YARN_CONF_DIR = "D:/tools/hadoop-2.7.3/etc/hadoop")
-
-ss <- sparkR.session(
-    appName = "Max Cal",
-    enableHiveSupport = T,
-    sparkConfig = list(
-        spark.driver.memory = "2g",
-        spark.executor.memory = "1g",
-        spark.executor.cores = "2",
-        spark.executor.instances = "2"
-    )
-)
-
-# source("dataPre/PhDataPre.R")
-source("dataAdding/PhUniverseReading.R", encoding = "UTF-8")
-source("dataAdding/PhCpaPhaMapping.R", encoding = "UTF-8")
-source("dataAdding/PhReadRawData.R", encoding = "UTF-8")
-source("dataAdding/PhContinuity.R", encoding = "UTF-8")
-source("dataAdding/PhGrowth.R", encoding = "UTF-8")
-source("dataAdding/PhCompareColumnsByRow.R", encoding = "UTF-8")
-source("dataAdding/PhDropDupCols.R", encoding = "UTF-8")
-source("dataAdding/PhRawDataTransformation.R", encoding = "UTF-8")
-source("dataAdding/PhAddData.R", encoding = "UTF-8")
-source("dataAdding/PhAddDataMultiplyGrowth.R", encoding = "UTF-8")
-source("dataAdding/PhCombindData.R", encoding = "UTF-8")
-source("dataAdding/PhAddDataNewHosp.R", encoding = "UTF-8")
-source('dataAdding/PhFormatRawData.R', encoding = 'UTF-8')
-source("panel/PhPanelGen.R", encoding = "UTF-8")
-source('dataAdding/PhCombindRawData.R')
 
 
+###新的一年无增长率，需要用老增长率代替
 
-# 1. 首次补数
+c_year <- 2020
+c_month <- 1
 
-uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
+gr <- read.df(gr_path_online,
+              "parquet")
+gr$GR1920 = gr$GR1819
+
+printSchema(gr)
+
+#uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
 universe <- read_universe(uni_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
-if(F){
+if(T){
   cpa_pha_mapping <- map_cpa_pha(
-    "/common/projects/max/Janssen/MappingPha"
+    cpa_pha_mapping_path, universe
   )
+  # cpa_pha_mapping <- map_cpa_pha(
+  #   "/common/projects/max/Janssen/MappingPha"
+  # )
 }
 
 
 
-# 1.3 读取所有原始样本数据:
-if(F){
-  raw_data <- combind_raw_data(
-    c("hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201910",
-      "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Sustenna_Market_201801-201910"),
+# 1.3 读取原始样本数据:
+if(T){
+  raw_data <- read_raw_data(
+    raw_data_path,
     cpa_pha_mapping
   )
+  # raw_data <- read_raw_data(
+  #   "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
+  #   cpa_pha_mapping
+  # )
   persist(raw_data, "MEMORY_ONLY")
 }
 
 
-raw_data <- sql("select * from CPA_Janssen where company = 'Janssen'")
-print(head(raw_data))
-
-raw_data <- format_raw_data(raw_data)
-
-# 1.4 计算样本医院连
-
-
-# 1.5 计算样本分子增长率:
-
-#gr_with_id <- gr_all[[2]]
-gr_with_id <- read.df("hdfs://192.168.100.137:8020//common/projects/max/Janssen/gr_with_id",
-                      "parquet")
-
-names(gr_with_id) <- c("PHA", "ID", "City", "CITYGROUP", "Molecule",
-                       "Year_2018", "Year_2019", "GR1819")
-
-printSchema(gr_with_id)
-
-c_year <- 2019
-c_month <- 10
 
 raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
 
 # 1.6 原始数据格式整理:
-seed <- trans_raw_data_for_adding(raw_data, id_city, gr_with_id)
+seed <- trans_raw_data_for_adding(raw_data, id_city, gr)
 
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
@@ -123,21 +74,123 @@ print(head(chk))
 
 # 2. panel
 
+
 panel <-
-    cal_max_data_panel(
-        uni_path,
-        mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-        map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
-        c_month = substr(c_year*100+c_month, 3, 6),
-        add_data = adding_data_new
-    )
+  cal_max_data_panel(
+    uni_path,
+    mkt_path,
+    map_path,
+    c_month = substr(c_year*100+c_month, 3, 6),
+    add_data = adding_data_new,
+    min_content,
+    need_cleaning_cols
+  )
+new_hospital <- openxlsx::read.xlsx(new_hospital_path, colNames=F)[[1]]
 
-write.df(panel %>% filter(panel$DOI == "Zytiga"), 
-         paste0("/common/projects/max/Janssen/panel-result_Zytiga_20",
-                substr(c_year*100+c_month, 3, 6)), 
-         "parquet", "overwrite")
+head(agg(groupBy(
+  raw_data, 'Year'
+),
+Sales = "sum"
+))
 
-write.df(panel %>% filter(panel$DOI == "Sustenna"), 
-         paste0("/common/projects/max/Janssen/panel-result_Sustenna_20",
-                substr(c_year*100+c_month, 3, 6)), 
-         "parquet", "overwrite")
+if(F){
+  kct <- c('北京市',
+           '长春市',
+           '长沙市',
+           '常州市',
+           '成都市',
+           '重庆市',
+           '大连市',
+           '福厦泉市',
+           '广州市',
+           '贵阳市',
+           '杭州市',
+           '哈尔滨市',
+           '济南市',
+           '昆明市',
+           '兰州市',
+           '南昌市',
+           '南京市',
+           '南宁市',
+           '宁波市',
+           '珠三角市',
+           '青岛市',
+           '上海市',
+           '沈阳市',
+           '深圳市',
+           '石家庄市',
+           '苏州市',
+           '太原市',
+           '天津市',
+           '温州市',
+           '武汉市',
+           '乌鲁木齐市',
+           '无锡市',
+           '西安市',
+           '徐州市',
+           '郑州市',
+           '合肥市',
+           '呼和浩特市',
+           '福州市',
+           '厦门市',
+           '泉州市',
+           '珠海市',
+           '东莞市',
+           '佛山市',
+           '中山市')
+  original_ym_molecule <- distinct(select(panel %>% filter(panel$add_flag == 0), 
+                                          'Date','Molecule'))
+  panel <- panel %>% join(original_ym_molecule, panel$Date == original_ym_molecule$Date &
+                            panel$Molecule == original_ym_molecule$Molecule,
+                          'inner') %>%
+    drop_dup_cols()
+  panel <- filter(panel, !(panel$add_flag == 1 & panel$City %in% c(
+    '北京市',
+    '上海市',
+    '天津市',
+    '重庆市',
+    '广州市',
+    '深圳市',
+    '西安市',
+    '大连市',
+    '成都市',
+    '厦门市',
+    '沈阳市'
+  )) & !(panel$add_flag == 1 & panel$Province %in% c(
+    '河北省',"福建省"
+  )) & !(panel$add_flag == 1 & panel$Date > 201900 & panel$Date < 202000) &
+    !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital)) &
+    !(panel$add_flag == 1 & !(panel$City %in% kct) & 
+        panel$Molecule %in% c('奥希替尼')))
+  head(agg(group_by(panel,'add_flag'), a= count(panel$add_flag)))
+  head(agg(groupBy(
+    panel,
+    "add_flag"
+  ),
+  Sales = "sum"
+  ))
+  
+  head(agg(groupBy(
+    raw_data
+  ),
+  Sales = "sum"
+  ))
+  
+}
+if(F){
+  write.df(panel, paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_",
+                         c_year*100+c_month), 
+           "parquet", "overwrite")
+}
+
+write.df(panel, panel_path, 
+         "parquet", "append")
+# panel <-
+#     cal_max_data_panel(
+#         uni_path,
+#         mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+#         map_path = "hdfs://192.168.100.137:8020//common/projects/max/Janssen/产品匹配表",
+#         c_month = substr(c_year*100+c_month, 3, 6),
+#         add_data = adding_data_new
+#     )
+

@@ -14,7 +14,7 @@ cal_csv_to_parquet <- function(path, dest) {
     write.parquet(mapDf, dest)
 }
 
-cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
+cal_large_data_frame_2_spark <- function(map, dest, step = 10000L, if_append) {
     d <- dim(map)
     print(d)
     round <- d[1] / step
@@ -27,8 +27,9 @@ cal_large_data_frame_2_spark <- function(map, dest, step = 10000L) {
         print(step * index + step)
         tmp <- map[(step * index + 1) : (step * index + step), ]
         tmpDf <- createDataFrame(tmp)
-        if(index == 0){
+        if(if_append == 0){
             write.parquet(tmpDf, dest, mode = "overwrite")
+            if_append = if_append + 1
         }else{
             write.parquet(tmpDf, dest, mode = "append")
         }
@@ -50,7 +51,7 @@ cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L,
     cal_large_data_frame_2_spark(map, dest, step)
 }
 
-cal_csv_large_data_to_parquet <- function(path, dest, step = 10000L) {
+cal_csv_large_data_to_parquet <- function(path, dest, step = 10000L, if_append = 0) {
     map <- fread(path, stringsAsFactors = F)
-    cal_large_data_frame_2_spark(map, dest, step)
+    cal_large_data_frame_2_spark(map, dest, step, if_append)
 }

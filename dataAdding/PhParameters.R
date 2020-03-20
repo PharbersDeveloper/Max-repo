@@ -32,8 +32,12 @@ need_cleaning_path =
 continuity_path = 
     paste0('Y:/MAX/AZ/UPDATE/','1910','/连续性',Sys.Date(),'.xlsx')
 
+
+new_hospital_path <- paste0('Y:/MAX/AZ/UPDATE/','1910/2019new_hospital','.xlsx')
+
 #增长率路径
 gr_path = paste0('Y:/MAX/AZ/UPDATE/','1910','/增长率',Sys.Date(),'.xlsx')
+gr_path_online = "/common/projects/max/AZ_Sanofi/gr"
 
 #第一阶段补数结果路径
 raw_data_adding_path <- "/common/projects/max/AZ_Sanofi/raw_data_adding"

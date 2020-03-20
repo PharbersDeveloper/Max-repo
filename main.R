@@ -77,7 +77,7 @@ if(T){
   persist(raw_data, "MEMORY_ONLY")
 }
 if(F){
-  raw_data <- filter(raw_data, raw_data$Year>2016)
+  raw_data <- filter(raw_data, raw_data$Year>2016 & raw_data$Year<2020)
 }
 
 if(F){
@@ -140,6 +140,8 @@ if(F){
                gr$CITYGROUP == gr_p2$CITYGROUP,
              'left') %>% drop_dup_cols()
   print(nrow(gr))
+  
+  write.parquet(gr, gr_path_online, mode = "overwrite")
   # gr_with_id <- distinct(rbind(gr_with_id_p1[,
   #                                            c("PHA",'ID',
   #                                              'City','CITYGROUP',
@@ -221,6 +223,11 @@ unpersist(raw_data, blocking = FALSE)
 adding_data_new_result <- add_data_new_hosp(raw_data_adding, original_range)
 adding_data_new <- adding_data_new_result[[1]]
 new_hospital <- adding_data_new_result[[2]]
+
+if(F){
+  openxlsx::write.xlsx(new_hospital, new_hospital_path)
+  new_hospital <- openxlsx::read.xlsx(new_hospital_path, colNames=F)[[1]]
+}
 # persist(adding_data_new, "MEMORY_AND_DISK")
 # unpersist(original_range, blocking = FALSE)
 
@@ -307,8 +314,14 @@ if(F){
            '中山市')
   original_ym_molecule <- distinct(select(panel %>% filter(panel$add_flag == 0), 
                                           'Date','Molecule'))
+  original_ym_min2 <- distinct(select(panel %>% filter(panel$add_flag == 0), 
+                                          'Date','Prod_Name'))
   panel <- panel %>% join(original_ym_molecule, panel$Date == original_ym_molecule$Date &
                             panel$Molecule == original_ym_molecule$Molecule,
+                          'inner') %>%
+    drop_dup_cols()
+  panel <- panel %>% join(original_ym_min2, panel$Date == original_ym_min2$Date &
+                            panel$Prod_Name == original_ym_min2$Prod_Name,
                           'inner') %>%
     drop_dup_cols()
   panel <- filter(panel, !(panel$add_flag == 1 & panel$City %in% c(
@@ -325,7 +338,7 @@ if(F){
     '沈阳市'
   )) & !(panel$add_flag == 1 & panel$Province %in% c(
     '河北省',"福建省"
-  )) & !(panel$add_flag == 1 & panel$Date > 201900) &
+  )) & !(panel$add_flag == 1 & panel$Date > 201900 & panel$Date < 202000) &
     !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital)) &
     !(panel$add_flag == 1 & !(panel$City %in% kct) & 
         panel$Molecule %in% c('奥希替尼')))
