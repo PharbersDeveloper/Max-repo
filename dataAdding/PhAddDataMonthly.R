@@ -40,7 +40,9 @@ if(T){
   persist(raw_data, "MEMORY_ONLY")
 }
 
-
+if(F){
+  raw_data <- filter(raw_data, raw_data$Year>2016)
+}
 
 raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
@@ -140,8 +142,14 @@ if(F){
            '中山市')
   original_ym_molecule <- distinct(select(panel %>% filter(panel$add_flag == 0), 
                                           'Date','Molecule'))
+  original_ym_min2 <- distinct(select(panel %>% filter(panel$add_flag == 0), 
+                                      'Date','Prod_Name'))
   panel <- panel %>% join(original_ym_molecule, panel$Date == original_ym_molecule$Date &
                             panel$Molecule == original_ym_molecule$Molecule,
+                          'inner') %>%
+    drop_dup_cols()
+  panel <- panel %>% join(original_ym_min2, panel$Date == original_ym_min2$Date &
+                            panel$Prod_Name == original_ym_min2$Prod_Name,
                           'inner') %>%
     drop_dup_cols()
   panel <- filter(panel, !(panel$add_flag == 1 & panel$City %in% c(
