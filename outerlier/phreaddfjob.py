@@ -11,6 +11,8 @@ def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
     df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 201912))
     if(doi == "SNY9"):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("SOLN"))
+    if(doi == "AZ12"):
+        df_EIA = df_EIA.where(~df_EIA.std_route.contains("OR"))
 
     df_EIA = df_EIA.withColumn("Year", func.bround(df_EIA.Date / 100))
 

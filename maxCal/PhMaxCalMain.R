@@ -5,9 +5,9 @@ source('maxCal/PhPanelBySeg.R', encoding = "UTF-8")
 source('maxCal/PhCombindUniverseAndFactor.R', encoding = "UTF-8")
 source('maxCal/PhRemoveNegativeValue.R', encoding = "UTF-8")
 
-mkt <- 'SNY11'
-time_l <- 201912
-time_r <- 202001
+mkt <- 'AZ12'
+time_l <- 201901
+time_r <- 201911
 time <- paste(time_l, time_r, sep = '-')
 
 

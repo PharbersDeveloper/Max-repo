@@ -15,6 +15,7 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data,
     mkt <- read.df(mkt_path, "parquet")
     map <- read.df(map_path, "parquet")
     names(map)[names(map) %in% '标准通用名'] <- '通用名'
+    names(map)[names(map) %in% '标准途径'] <- 'std_route'
     names(mkt)[names(mkt) %in% '标准通用名'] <- '通用名'
     names(mkt)[names(mkt) %in% 'model'] <- 'mkt'
     
@@ -51,7 +52,7 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data,
                              need_cleaning_path)
     }
     ### Panel
-    mp <- distinct(select(map, "min1", "min2", "通用名"))
+    mp <- distinct(select(map, "min1", "min2", "通用名", 'std_route'))
     panel <- join(add_data, mp, add_data$min1 == mp$min1, "left") %>%
         drop_dup_cols()
     
@@ -78,14 +79,17 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data,
                      panel$通用名,
                      panel$Province,
                      panel$City,
-                     panel$add_flag
+                     panel$add_flag,
+                     panel$std_route
                     ),
                  Sales = sum(panel$Sales),
                  Units = sum(panel$Units)),
                 c("ID", "Date", "min2", "mkt", 
-                  "HOSP_NAME", "PHA","通用名","Province","City","add_flag"),
+                  "HOSP_NAME", "PHA","通用名","Province","City","add_flag",
+                  'std_route'),
                 c("ID", "Date", "Prod_Name", "DOI", 
-                  "Hosp_name", "HOSP_ID","Molecule", "Province","City","add_flag"))
+                  "Hosp_name", "HOSP_ID","Molecule", "Province","City",
+                  "add_flag", 'std_route'))
     
     panel <- mutate(panel, 
                     Prod_CNAME = panel$Prod_Name,
