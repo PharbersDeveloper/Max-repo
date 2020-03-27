@@ -102,9 +102,13 @@ cal_max_data_panel <- function(uni_path, mkt_path, map_path, c_month, add_data,
 }
 
 concat_multi_cols <- function(df, cols, new_col, sep) {
-    df[['tmp']] <- df[[cols[1]]]
+    df[['tmp']] <- ifelse(!isNull(df[[cols[1]]]),
+                          df[[cols[1]]], lit('NA'))
     for (col in cols[-1]) {
-        df <- mutate(df, tmp = concat(df[['tmp']], lit(sep), df[[col]]))
+        tmp_col <- ifelse(!isNull(df[[col]]),
+                      df[[col]], lit('NA'))
+        df <- mutate(df, tmp = concat(df[['tmp']], lit(sep), 
+                                      tmp_col))
     }
     df <- withColumnRenamed(df, 'tmp', new_col)
     

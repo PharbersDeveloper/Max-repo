@@ -95,6 +95,126 @@ head(agg(groupBy(
 Sales = "sum"
 ))
 
+panel_raw_data <- panel %>% filter(panel$add_flag == 0)
+panel_add_data <- panel %>% filter(panel$add_flag == 1)
+
+
+
+original_ym_molecule <- distinct(select(panel_raw_data, 
+                                        'Date','Molecule'))
+original_ym_min2 <- distinct(select(panel_raw_data, 
+                                    'Date','Prod_Name'))
+
+
+panel_add_data <- panel_add_data %>% 
+  join(original_ym_molecule, 
+       panel_add_data$Date == original_ym_molecule$Date &
+         panel_add_data$Molecule == original_ym_molecule$Molecule,
+       'inner') %>%
+  drop_dup_cols()
+panel_add_data <- panel_add_data %>% 
+  join(original_ym_min2, 
+       panel_add_data$Date == original_ym_min2$Date &
+         panel_add_data$Prod_Name == original_ym_min2$Prod_Name,
+       'inner') %>%
+  drop_dup_cols()
+
+kct <- c('北京市',
+         '长春市',
+         '长沙市',
+         '常州市',
+         '成都市',
+         '重庆市',
+         '大连市',
+         '福厦泉市',
+         '广州市',
+         '贵阳市',
+         '杭州市',
+         '哈尔滨市',
+         '济南市',
+         '昆明市',
+         '兰州市',
+         '南昌市',
+         '南京市',
+         '南宁市',
+         '宁波市',
+         '珠三角市',
+         '青岛市',
+         '上海市',
+         '沈阳市',
+         '深圳市',
+         '石家庄市',
+         '苏州市',
+         '太原市',
+         '天津市',
+         '温州市',
+         '武汉市',
+         '乌鲁木齐市',
+         '无锡市',
+         '西安市',
+         '徐州市',
+         '郑州市',
+         '合肥市',
+         '呼和浩特市',
+         '福州市',
+         '厦门市',
+         '泉州市',
+         '珠海市',
+         '东莞市',
+         '佛山市',
+         '中山市')
+panel_add_data <- filter(
+  panel_add_data,!(
+    panel_add_data$City %in% c(
+      '北京市',
+      '上海市',
+      '天津市',
+      '重庆市',
+      '广州市',
+      '深圳市',
+      '西安市',
+      '大连市',
+      '成都市',
+      '厦门市',
+      '沈阳市'
+    )
+  ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
+    !(
+      !(panel_add_data$City %in% kct) &
+        panel_add_data$Molecule %in% c('奥希替尼')
+    )
+)
+
+not_arrived <- 
+  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
+                   openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
+
+unpublished <- openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx")
+future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
+
+
+panel_add_data_fut <- panel_add_data %>% 
+  filter(panel_add_data$Date > 201911)
+
+
+panel_add_data_fut <- panel_add_data_fut %>% 
+  join(future_range, 
+       panel_add_data_fut$Date == future_range$Date &
+         panel_add_data_fut$ID == future_range$ID,
+       'inner') %>%
+  drop_dup_cols()
+
+
+panel_filtered <- rbind(panel_raw_data, panel_add_data_fut)
+
+head(agg(group_by(panel_filtered,'add_flag'), a= count(panel_filtered$add_flag)))
+head(agg(groupBy(
+  panel_filtered,
+  "add_flag"
+),
+Sales = "sum"
+))
+
 if(F){
   kct <- c('北京市',
            '长春市',
@@ -186,12 +306,12 @@ if(F){
   
 }
 if(F){
-  write.df(panel, paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_",
+  write.df(panel_filtered, paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_",
                          c_year*100+c_month), 
            "parquet", "overwrite")
 }
 
-write.df(panel, panel_path, 
+write.df(panel_filtered, panel_path, 
          "parquet", "append")
 # panel <-
 #     cal_max_data_panel(

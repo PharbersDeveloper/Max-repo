@@ -267,51 +267,144 @@ panel <-
     need_cleaning_cols
   )
 
+panel_raw_data <- panel %>% filter(panel$add_flag == 0)
+panel_add_data <- panel %>% filter(panel$add_flag == 1)
+
+
+
+original_ym_molecule <- distinct(select(panel_raw_data, 
+                                        'Date','Molecule'))
+original_ym_min2 <- distinct(select(panel_raw_data, 
+                                    'Date','Prod_Name'))
+
+
+panel_add_data <- panel_add_data %>% 
+  join(original_ym_molecule, 
+       panel_add_data$Date == original_ym_molecule$Date &
+         panel_add_data$Molecule == original_ym_molecule$Molecule,
+                        'inner') %>%
+  drop_dup_cols()
+panel_add_data <- panel_add_data %>% 
+  join(original_ym_min2, 
+       panel_add_data$Date == original_ym_min2$Date &
+         panel_add_data$Prod_Name == original_ym_min2$Prod_Name,
+                        'inner') %>%
+  drop_dup_cols()
+
+#早于model所用时间（历史数据），用new_hospital补数;
+#处于model所用时间（模型数据），不补数；
+#晚于model所用时间（月更新数据），用unpublished和not arrived补数
+
+kct <- c('北京市',
+         '长春市',
+         '长沙市',
+         '常州市',
+         '成都市',
+         '重庆市',
+         '大连市',
+         '福厦泉市',
+         '广州市',
+         '贵阳市',
+         '杭州市',
+         '哈尔滨市',
+         '济南市',
+         '昆明市',
+         '兰州市',
+         '南昌市',
+         '南京市',
+         '南宁市',
+         '宁波市',
+         '珠三角市',
+         '青岛市',
+         '上海市',
+         '沈阳市',
+         '深圳市',
+         '石家庄市',
+         '苏州市',
+         '太原市',
+         '天津市',
+         '温州市',
+         '武汉市',
+         '乌鲁木齐市',
+         '无锡市',
+         '西安市',
+         '徐州市',
+         '郑州市',
+         '合肥市',
+         '呼和浩特市',
+         '福州市',
+         '厦门市',
+         '泉州市',
+         '珠海市',
+         '东莞市',
+         '佛山市',
+         '中山市')
+panel_add_data <- filter(
+  panel_add_data,!(
+    panel_add_data$City %in% c(
+      '北京市',
+      '上海市',
+      '天津市',
+      '重庆市',
+      '广州市',
+      '深圳市',
+      '西安市',
+      '大连市',
+      '成都市',
+      '厦门市',
+      '沈阳市'
+    )
+  ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
+    !(
+      !(panel_add_data$City %in% kct) &
+        panel_add_data$Molecule %in% c('奥希替尼')
+    )
+)
+
+not_arrived <- 
+  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
+            openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
+
+unpublished <- openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx")
+future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
+
+panel_add_data_his <- panel_add_data %>%
+  filter(panel_add_data$HOSP_ID %in% new_hospital &
+      panel_add_data$Date < 201901
+  )
+panel_add_data_fut <- panel_add_data %>% 
+  filter(panel_add_data$Date > 201911)
+
+panel_add_data_fut <- panel_add_data_fut %>% 
+  join(future_range, 
+       panel_add_data_fut$Date == future_range$Date &
+         panel_add_data_fut$ID == future_range$ID,
+       'inner') %>%
+  drop_dup_cols()
+
+
+
+
+panel_filtered <- rbind(panel_raw_data, panel_add_data_his) %>%
+  rbind(panel_add_data_fut)
+
+head(agg(group_by(panel_filtered,'add_flag'), a= count(panel_filtered$add_flag)))
+head(agg(groupBy(
+  panel_filtered,
+  "add_flag"
+),
+Sales = "sum"
+))
+
+head(agg(groupBy(
+  raw_data
+),
+Sales = "sum"
+))
+
+
 if(F){
-  kct <- c('北京市',
-           '长春市',
-           '长沙市',
-           '常州市',
-           '成都市',
-           '重庆市',
-           '大连市',
-           '福厦泉市',
-           '广州市',
-           '贵阳市',
-           '杭州市',
-           '哈尔滨市',
-           '济南市',
-           '昆明市',
-           '兰州市',
-           '南昌市',
-           '南京市',
-           '南宁市',
-           '宁波市',
-           '珠三角市',
-           '青岛市',
-           '上海市',
-           '沈阳市',
-           '深圳市',
-           '石家庄市',
-           '苏州市',
-           '太原市',
-           '天津市',
-           '温州市',
-           '武汉市',
-           '乌鲁木齐市',
-           '无锡市',
-           '西安市',
-           '徐州市',
-           '郑州市',
-           '合肥市',
-           '呼和浩特市',
-           '福州市',
-           '厦门市',
-           '泉州市',
-           '珠海市',
-           '东莞市',
-           '佛山市',
-           '中山市')
+  
   original_ym_molecule <- distinct(select(panel %>% filter(panel$add_flag == 0), 
                                           'Date','Molecule'))
   original_ym_min2 <- distinct(select(panel %>% filter(panel$add_flag == 0), 
@@ -338,8 +431,9 @@ if(F){
     '沈阳市'
   )) & !(panel$add_flag == 1 & panel$Province %in% c(
     '河北省',"福建省"
-  )) & !(panel$add_flag == 1 & panel$Date > 201900 & panel$Date < 202000) &
-    !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital)) &
+  )) & !(panel$add_flag == 1 & panel$Date > 201900 & panel$Date < 201912) &
+    !(panel$add_flag == 1 & !(panel$HOSP_ID %in% new_hospital) & 
+        panel$Date < 201912) &
     !(panel$add_flag == 1 & !(panel$City %in% kct) & 
         panel$Molecule %in% c('奥希替尼')))
   head(agg(group_by(panel,'add_flag'), a= count(panel$add_flag)))
@@ -357,31 +451,31 @@ if(F){
   ))
   
 }
-write.df(panel, panel_path, 
+write.df(panel_filtered, panel_path, 
          "parquet", "overwrite")
 
 
 if(F){
-  panel = read.df(panel_path, "parquet")
+  panel_filtered = read.df(panel_path, "parquet")
   # panel = panel %>% filter(panel$Date>201900)
   #panel_c <- filter(panel, panel$Date>201900)
   
   
-  panel_c <- panel %>%
+  panel_c <- panel_filtered %>%
     group_by('ID', 'Date', 'DOI', 'Hosp_name', 'HOSP_ID', 'Province', 'City', 
              'add_flag') %>%
-    summarize(Sales = sum(panel$Sales),
-              Units = sum(panel$Units))
+    summarize(Sales = sum(panel_filtered$Sales),
+              Units = sum(panel_filtered$Units))
   panel_c <- collect(panel_c)
   
-  panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
-                             '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
+  panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','2001',
+                             '/panel_hosp+ym_level_201701-202001_',Sys.Date(),'.csv')
   write.csv(panel_c, panel_path_local, row.names = F)
   
   
   
-  panel_c <- filter(panel, panel$Date>201900 &
-                      panel$Date<201912)
+  panel_c <- filter(panel_filtered, panel_filtered$Date>201900 &
+                      panel_filtered$Date<201912)
   panel_c <- panel_c %>%
     group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag') %>%
     summarize(sales201911YTD = sum(panel_c$Sales))

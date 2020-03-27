@@ -1,19 +1,19 @@
 
 #原始数据
 raw_data_path <- 
-    "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/简单整合的az201701-201909_sanofi201801-201911原始数据_去重版_20200210"
+    "/common/projects/max/AZ_Sanofi/简单整合的az201701-201909_sanofi201801-201911原始数据_去重版_20200210"
 
 #universe
-#uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/universe_az_sanofi_2spec"
-uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/universe_az_sanofi_base"
+#uni_path <- "/common/projects/max/AZ_Sanofi/universe_az_sanofi_2spec"
+uni_path <- "/common/projects/max/AZ_Sanofi/universe_az_sanofi_base"
 
 #原始医院与pha匹配
-cpa_pha_mapping_path <- "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/医院匹配_20191031"
+cpa_pha_mapping_path <- "/common/projects/max/AZ_Sanofi/医院匹配_20191031"
 
 #分子匹配模型
-mkt_path = "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
+mkt_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 ##最小产品单位标准化
-map_path = "hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
+map_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 
 #月份文件夹
 c_month = "1701-1911"
@@ -47,7 +47,7 @@ adding_data_new_path <- "/common/projects/max/AZ_Sanofi/adding_data_new"
 
 
 #panel路径
-panel_path <- paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-201911_20200212")
+panel_path <- paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_20200326")
 # panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
 #                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 

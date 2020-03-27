@@ -51,7 +51,7 @@ def max_outlier_factor_inner_loop_old(spark, rlt_scs, df_rlt, fst_prd, bias, ind
             df_tmp.write.format("parquet") \
                 .mode("append").save(tmp_df_factor_result_path)
             #df_result_all = df_result_all.union(df_result)
-        time.sleep(0.5)
+        #time.sleep(0.5)
         index = index + 1
         #df_factor_result = df_factor_result.union(df_tmp)
 
