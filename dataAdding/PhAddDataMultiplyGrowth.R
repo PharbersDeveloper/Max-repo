@@ -13,8 +13,9 @@ get_seed_data <- function(seed, seed_range, y){
     return(seed_for_adding)
 }
 
-cal_seed_with_gr <- function(df, y, years,all_gr_index){
+cal_seed_with_gr <- function(df, y, years,all_gr_index, price_path){
     
+    price <- read.df(price_path, 'parquet')
     
     base_index <- y-min(years)+min(all_gr_index)
     
@@ -45,9 +46,18 @@ cal_seed_with_gr <- function(df, y, years,all_gr_index){
     df$final_gr <- min_by_row(df$total_gr, lit(2))
     
     df$Sales <- df$Sales * df$final_gr
-    df$Units <- df$Units * df$final_gr
+    #df$Units <- df$Units * df$final_gr
     
     df$Year <- y
+    
+    df$year_month <- df$Year * 100 + df$Month
+    
+    df <- df %>% join(price, df$min2 == price$min2 & 
+                          df$year_month == price$year_month &
+                      df$CITYGROUP == price$City_Tier_2010) %>%
+        drop_dup_cols()
+    df$Units <- ifelse(df$Sales==0,0,df$Sales / df$Price)
+    
     #print(head(df))
     return(df)
     

@@ -21,7 +21,8 @@ add_data <- function(seed) {
         seed_for_adding <- get_seed_data(seed, seed_range, y)
         
         seed_for_adding <-
-            cal_seed_with_gr(seed_for_adding, y, years, all_gr_index)
+            cal_seed_with_gr(seed_for_adding, y, years, all_gr_index,
+                             price_path)
         
         if (empty == 0) {
             adding_data <- seed_for_adding

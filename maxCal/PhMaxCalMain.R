@@ -6,7 +6,7 @@ source('maxCal/PhCombindUniverseAndFactor.R', encoding = "UTF-8")
 source('maxCal/PhRemoveNegativeValue.R', encoding = "UTF-8")
 
 mkt <- 'AZ12'
-time_l <- 201901
+time_l <- 201701
 time_r <- 201911
 time <- paste(time_l, time_r, sep = '-')
 

@@ -44,6 +44,7 @@ source('dataAdding/PhParameters.R', encoding = 'UTF-8')
 source('dataAdding/PhAddGrCols.R', encoding = 'UTF-8')
 source('dataAdding/PhSetSchema.R', encoding = 'UTF-8')
 source('dataAdding/PhSumMultiCols.R', encoding = 'UTF-8')
+source('dataAdding/PhCalPrice.R')
 
 
 # 1. 首次补数
@@ -76,6 +77,62 @@ if(T){
   # )
   persist(raw_data, "MEMORY_ONLY")
 }
+
+raw_data <- join(raw_data, id_city,
+                 raw_data$PHA == id_city$PHA, 'left') %>%
+  drop_dup_cols()
+
+full_product <- ifelse(!isNull(raw_data$Brand),
+                       raw_data$Brand, raw_data$Molecule)
+
+raw_data <- mutate(
+  raw_data,
+  Brand = full_product
+)
+
+raw_data <- concat_multi_cols(raw_data, min_content,
+                              'min1',
+                              sep = "|")
+map <- read.df(map_path, "parquet")
+names(map)[names(map) %in% '标准通用名'] <- '通用名'
+names(map)[names(map) %in% '标准途径'] <- 'std_route'
+map1 <- distinct(select(map, 'min1'))
+mp <- distinct(select(map, "min1", "min2", "通用名", 'std_route','标准商品名'))
+
+### 输出待清洗
+need_cleaning <- distinct(select(raw_data %>%
+                                   join(map1, raw_data$min1== map1$min1,'left_anti') %>%
+                                   drop_dup_cols(),
+                                 need_cleaning_cols
+))
+if(nrow(need_cleaning)>0){
+  # need_cleaning_path = 
+  #     paste0('Y:/MAX/Janssen/UPDATE/',c_month,'/待清洗',Sys.Date(),'.xlsx')
+  print(paste("已输出待清洗文件至", need_cleaning_path))
+  
+  openxlsx::write.xlsx(collect(need_cleaning), 
+                       need_cleaning_path)
+}
+
+
+raw_data <- join(raw_data, mp, raw_data$min1 == mp$min1, "left") %>%
+  drop_dup_cols()
+raw_data <- drop(raw_data, 'S_Molecule')
+names(raw_data)[names(raw_data) == c('通用名')] <- 'S_Molecule'
+
+
+poi = openxlsx::read.xlsx("y:/MAX/AZ/UPDATE/2001/poi.xlsx")[[1]]
+
+raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
+                                     raw_data$标准商品名,
+                                     raw_data$S_Molecule)
+
+##补数部分的数量需要用价格得出
+price <- cal_price(raw_data)
+
+write.df(price, price_path, 'parquet', 'overwrite')
+
+
 if(F){
   raw_data <- filter(raw_data, raw_data$Year>2016 & raw_data$Year<2020)
 }
@@ -100,6 +157,8 @@ if(F){
 
 
 # 1.5 计算样本分子增长率:
+
+##TODO:建立一个重点产品表，把这些产品分子名改成标准产品名，单独计算增长率
 if(T){
   #完整年
   gr_all_p1 <- cal_growth(raw_data %>% 
@@ -260,11 +319,8 @@ panel <-
   cal_max_data_panel(
     uni_path,
     mkt_path,
-    map_path,
     c_month,
-    add_data = adding_data_new,
-    min_content,
-    need_cleaning_cols
+    add_data = adding_data_new
   )
 
 panel_raw_data <- panel %>% filter(panel$add_flag == 0)
@@ -476,13 +532,13 @@ if(F){
   
   panel_c <- filter(panel_filtered, panel_filtered$Date>201900 &
                       panel_filtered$Date<201912)
-  panel_c <- panel_c %>%
-    group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag') %>%
-    summarize(sales201911YTD = sum(panel_c$Sales))
-  panel_c <- collect(panel_c)
-  openxlsx::write.xlsx(panel_c, 
-                       paste0("Y:/MAX/AZ/UPDATE/1912/panel_without_hosp_201911YTD_",
-                              Sys.Date(),".xlsx"))
+  # panel_c <- panel_c %>%
+  #   group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag') %>%
+  #   summarize(sales201911YTD = sum(panel_c$Sales))
+  # panel_c <- collect(panel_c)
+  # openxlsx::write.xlsx(panel_c, 
+  #                      paste0("Y:/MAX/AZ/UPDATE/1912/panel_without_hosp_201911YTD_",
+  #                             Sys.Date(),".xlsx"))
   
   panel_c <- panel_c %>%
     group_by('Prod_Name', 'DOI', 'Molecule', 'add_flag','Province','City') %>%

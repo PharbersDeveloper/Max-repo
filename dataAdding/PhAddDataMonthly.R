@@ -1,15 +1,31 @@
 
 
-###新的一年无增长率，需要用老增长率代替
+###新的一年无增长率，需要用老增长率代替。
+###更正：无全年增长就用当月同比增长。
+###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
 c_month <- 1
 
-gr <- read.df(gr_path_online,
-              "parquet")
-gr$GR1920 = gr$GR1819
 
-printSchema(gr)
+published_l <- openxlsx::read.xlsx(published_l_path)
+published_r <- openxlsx::read.xlsx(published_r_path)
+not_arrived <- 
+  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
+                   openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
+
+
+same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
+  setdiff(not_arrived$ID[not_arrived$Date == c_year*100+c_month])
+
+
+# gr <- read.df(gr_path_online,
+#               "parquet")
+# 
+# ##
+# gr$GR1920 = gr$GR1819
+
+# printSchema(gr)
 
 #uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
 universe <- read_universe(uni_path)
@@ -40,15 +56,68 @@ if(T){
   persist(raw_data, "MEMORY_ONLY")
 }
 
+
+raw_data <- join(raw_data, id_city,
+                 raw_data$PHA == id_city$PHA, 'left') %>%
+  drop_dup_cols()
+
+full_product <- ifelse(!isNull(raw_data$Brand),
+                       raw_data$Brand, raw_data$Molecule)
+
+
+raw_data <- mutate(
+  raw_data,
+  Brand = full_product
+)
+raw_data <- concat_multi_cols(raw_data, min_content,
+                              'min1',
+                              sep = "|")
+map <- read.df(map_path, "parquet")
+names(map)[names(map) %in% '标准通用名'] <- '通用名'
+names(map)[names(map) %in% '标准途径'] <- 'std_route'
+map1 <- distinct(select(map, 'min1'))
+mp <- distinct(select(map, "min1", "min2", "通用名", 'std_route','标准商品名'))
+need_cleaning <- distinct(select(raw_data %>%
+                                   join(map1, raw_data$min1== map1$min1,'left_anti') %>%
+                                   drop_dup_cols(),
+                                 need_cleaning_cols
+))
+
+print(nrow(need_cleaning))
+if(nrow(need_cleaning)>0){
+  # need_cleaning_path = 
+  #     paste0('Y:/MAX/Janssen/UPDATE/',c_month,'/待清洗',Sys.Date(),'.xlsx')
+  print(paste("已输出待清洗文件至", need_cleaning_path))
+  
+  openxlsx::write.xlsx(collect(need_cleaning), 
+                       need_cleaning_path)
+}
+
+
+raw_data <- join(raw_data, mp, raw_data$min1 == mp$min1, "left") %>%
+  drop_dup_cols()
+raw_data <- drop(raw_data, 'S_Molecule')
+names(raw_data)[names(raw_data) == c('通用名')] <- 'S_Molecule'
+
+
+poi = openxlsx::read.xlsx("y:/MAX/AZ/UPDATE/2001/poi.xlsx")[[1]]
+
+raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
+                              raw_data$标准商品名,
+                              raw_data$S_Molecule)
+
+
 if(F){
   raw_data <- filter(raw_data, raw_data$Year>2016)
 }
 
 raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
-
+gr_all <- cal_growth(raw_data %>% 
+                          filter((raw_data$ID %in% same_hosp)))
+gr <- gr_all[[1]]
 # 1.6 原始数据格式整理:
-seed <- trans_raw_data_for_adding(raw_data, id_city, gr)
+seed <- trans_raw_data_for_adding(raw_data, gr)
 
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
@@ -81,11 +150,8 @@ panel <-
   cal_max_data_panel(
     uni_path,
     mkt_path,
-    map_path,
     c_month = substr(c_year*100+c_month, 3, 6),
-    add_data = adding_data_new,
-    min_content,
-    need_cleaning_cols
+    add_data = adding_data_new
   )
 new_hospital <- openxlsx::read.xlsx(new_hospital_path, colNames=F)[[1]]
 
@@ -185,9 +251,6 @@ panel_add_data <- filter(
     )
 )
 
-not_arrived <- 
-  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
-                   openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
 
 unpublished <- openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx")
 future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()

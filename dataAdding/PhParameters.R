@@ -2,7 +2,7 @@
 #原始数据
 raw_data_path <- 
     "/common/projects/max/AZ_Sanofi/简单整合的az201701-201909_sanofi201801-201911原始数据_去重版_20200210"
-
+#"/common/projects/max/AZ_Sanofi/raw_data/简单整合的az201701-201909_sanofi201801-202001"
 #universe
 #uni_path <- "/common/projects/max/AZ_Sanofi/universe_az_sanofi_2spec"
 uni_path <- "/common/projects/max/AZ_Sanofi/universe_az_sanofi_base"
@@ -16,7 +16,7 @@ mkt_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 map_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 
 #月份文件夹
-c_month = "1701-1911"
+c_month = "2001"
 
 #不足12个月的年份
 year_missing = c(2019)
@@ -47,7 +47,8 @@ adding_data_new_path <- "/common/projects/max/AZ_Sanofi/adding_data_new"
 
 
 #panel路径
-panel_path <- paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_20200326")
+panel_path <- 
+    paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_新年份用的新的月份增长且考虑价格")
 # panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
 #                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 
@@ -68,3 +69,11 @@ min_content <- c('Brand',
 
 
 need_cleaning_cols <- c("Molecule", min_content, "min1", 'Route', 'Corp')
+
+
+
+published_l_path <- "y:/MAX/Sanofi/UPDATE/2001/Published2019.xlsx"
+published_r_path <- "y:/MAX/Sanofi/UPDATE/2001/Published2020.xlsx"
+
+
+price_path <- paste0("/common/projects/max/AZ_Sanofi/price")
