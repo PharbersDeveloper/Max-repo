@@ -77,3 +77,8 @@ published_r_path <- "y:/MAX/Sanofi/UPDATE/2001/Published2020.xlsx"
 
 
 price_path <- paste0("/common/projects/max/AZ_Sanofi/price")
+
+adding_data_path <- "/common/projects/max/AZ_Sanofi/adding_data_tmp"
+
+
+raw_data_tmp_path <- "/common/projects/max/AZ_Sanofi/raw_data_tmp"

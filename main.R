@@ -158,14 +158,13 @@ if(F){
 
 # 1.5 计算样本分子增长率:
 
-##TODO:建立一个重点产品表，把这些产品分子名改成标准产品名，单独计算增长率
+#
 if(T){
   #完整年
   gr_all_p1 <- cal_growth(raw_data %>% 
-                         filter(!(raw_data$Year %in% year_missing)), 
-                       id_city)
+                         filter(!(raw_data$Year %in% year_missing)))
   gr_p1 <- gr_all_p1[[1]]
-  gr_with_id_p1 <- gr_all_p1[[2]]
+  #gr_with_id_p1 <- gr_all_p1[[2]]
 }
 
 if(T){
@@ -173,29 +172,29 @@ if(T){
   gr_all_p2 <- cal_growth(raw_data %>% 
                          filter((raw_data$Year %in% 
                                    c(year_missing, year_missing-1,
-                                     year_missing+1))), 
-                       id_city, max_month)
+                                     year_missing+1))),
+                         max_month)
   gr_p2 <- gr_all_p2[[1]]
-  gr_with_id_p2 <- gr_all_p2[[2]]
+  #gr_with_id_p2 <- gr_all_p2[[2]]
 }
 
 
 if(F){
   
-  gr=rbind(gr_p1[,c('S_Molecule','CITYGROUP')], 
-           gr_p2[,c('S_Molecule','CITYGROUP')]) %>%
+  gr=rbind(gr_p1[,c('S_Molecule_for_gr','CITYGROUP')], 
+           gr_p2[,c('S_Molecule_for_gr','CITYGROUP')]) %>%
     distinct()
   print(nrow(gr))
   gr <- join(gr,
-             gr_p1[, c('S_Molecule', 'CITYGROUP',
+             gr_p1[, c('S_Molecule_for_gr', 'CITYGROUP',
                        names(gr_p1)[startsWith(names(gr_p1), 'GR')])],
-             gr$S_Molecule == gr_p1$S_Molecule &
+             gr$S_Molecule_for_gr == gr_p1$S_Molecule_for_gr &
                gr$CITYGROUP == gr_p1$CITYGROUP,
              'left') %>% drop_dup_cols()
   gr <- join(gr,
-             gr_p2[, c('S_Molecule', 'CITYGROUP',
+             gr_p2[, c('S_Molecule_for_gr', 'CITYGROUP',
                        names(gr_p2)[startsWith(names(gr_p2), 'GR')])],
-             gr$S_Molecule == gr_p2$S_Molecule &
+             gr$S_Molecule_for_gr == gr_p2$S_Molecule_for_gr &
                gr$CITYGROUP == gr_p2$CITYGROUP,
              'left') %>% drop_dup_cols()
   print(nrow(gr))
@@ -245,7 +244,7 @@ if(F){
 }
 
 # 1.6 原始数据格式整理:
-seed <- trans_raw_data_for_adding(raw_data, id_city, gr)
+seed <- trans_raw_data_for_adding(raw_data, gr)
 
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
@@ -525,7 +524,7 @@ if(F){
   panel_c <- collect(panel_c)
   
   panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','2001',
-                             '/panel_hosp+ym_level_201701-202001_',Sys.Date(),'.csv')
+                             '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
   write.csv(panel_c, panel_path_local, row.names = F)
   
   

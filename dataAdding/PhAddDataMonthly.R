@@ -113,6 +113,16 @@ if(F){
 
 raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
+
+
+if(F){
+  
+  write.parquet(raw_data, raw_data_tmp_path, mode = "overwrite")
+  raw_data <- read.df(raw_data_tmp_path, "parquet")
+  
+  
+}
+
 gr_all <- cal_growth(raw_data %>% 
                           filter((raw_data$ID %in% same_hosp)))
 gr <- gr_all[[1]]
@@ -127,9 +137,20 @@ adding_results <- add_data(seed)
 adding_data <- adding_results[[1]]
 
 
+if(F){
+  
+  write.parquet(adding_data, adding_data_path, mode = "overwrite")
+  adding_data <- read.df(adding_data_path, "parquet")
+  
+  
+}
+
+
 # 1.8 合并补数部分和原始部分:
 raw_data_adding <- combind_data(raw_data, adding_data)
 raw_data_adding <- repartition(raw_data_adding, 2L)
+
+
 
 
 adding_data_new <- raw_data_adding %>%

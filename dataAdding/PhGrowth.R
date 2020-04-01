@@ -39,6 +39,7 @@ cal_growth <- function(raw_data, max_month = 12){
     # )
     print(head(gr))
     years <- unique(as.data.frame(gr)$Year) %>% sort()
+    print(years)
     con_schema <- multi_struct_fileds(c('S_Molecule_for_gr', 'CITYGROUP',
                                         paste0("Year_", years)),
                                       c("string", "string", 
