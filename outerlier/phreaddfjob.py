@@ -13,6 +13,10 @@ def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("SOLN"))
     if(doi == "AZ12"):
         df_EIA = df_EIA.where(~df_EIA.std_route.contains("OR"))
+    if(doi == "AZ16"):
+        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Extended"))
+    if(doi == "AZ19"):
+        df_EIA = df_EIA.where(~df_EIA.std_route.contains("Others-Symbicort Cough"))
 
     df_EIA = df_EIA.withColumn("Year", func.bround(df_EIA.Date / 100))
 

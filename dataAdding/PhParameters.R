@@ -48,7 +48,7 @@ adding_data_new_path <- "/common/projects/max/AZ_Sanofi/adding_data_new"
 
 #panel路径
 panel_path <- 
-    paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_新年份用的新的月份增长且考虑价格")
+    '/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_考虑价格'
 # panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
 #                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 
@@ -82,3 +82,15 @@ adding_data_path <- "/common/projects/max/AZ_Sanofi/adding_data_tmp"
 
 
 raw_data_tmp_path <- "/common/projects/max/AZ_Sanofi/raw_data_tmp"
+
+
+model_month_l <- 201901
+model_month_r <- 201911
+
+
+poi_path <- "y:/MAX/AZ/UPDATE/2001/poi.xlsx"
+
+not_arrived_path <- "y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"
+
+
+unpublished_path <- "y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx"

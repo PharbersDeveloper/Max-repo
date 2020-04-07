@@ -5,15 +5,15 @@ source('maxCal/PhPanelBySeg.R', encoding = "UTF-8")
 source('maxCal/PhCombindUniverseAndFactor.R', encoding = "UTF-8")
 source('maxCal/PhRemoveNegativeValue.R', encoding = "UTF-8")
 
-mkt <- 'AZ12'
-time_l <- 201701
+mkt <- 'AZ19'
+time_l <- 201901
 time_r <- 201911
 time <- paste(time_l, time_r, sep = '-')
 
 
-if(mkt %in% c('SNY6','SNY10','SNY12','SNY13','AZ12')){
+if(mkt %in% c('SNY6','SNY10','SNY12','SNY13','AZ12','AZ18')){
     uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_onc')
-}else if(mkt %in% c('SNY5', 'SNY9', 'AZ10' ,'AZ11', 'AZ15')){
+}else if(mkt %in% c('SNY5', 'SNY9', 'AZ10' ,'AZ11', 'AZ15', 'AZ16', 'AZ14')){
     uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_mch')
 }else{
     uni_path <- paste0('/common/projects/max/AZ_Sanofi/universe_az_sanofi_base')

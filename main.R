@@ -17,12 +17,26 @@ ss <- sparkR.session(
   appName = "Max Cal",
   enableHiveSupport = T,
   sparkConfig = list(
-    spark.driver.memory = "2g",
-    spark.executor.memory = "1g",
+    spark.driver.memory = "6g",
+    spark.executor.memory = "6g",
     spark.executor.cores = "2",
-    spark.executor.instances = "2"
+    spark.cores.max = "4",
+    spark.executor.instances = "2",
+    spark.core.connection.ack.wait.timeout = "600s",
+    spark.default.parallelism4 = "4"
+    
   )
 )
+
+ 
+# spark.core.connection.ack.wait.timeout 600s
+# spark.default.parallelism 4
+# spark.driver.memory 6g
+# spark.executor.memory 10g
+# spark.cores.max 4
+# spark.executor.cores 2
+
+
 
 # source("dataPre/PhDataPre.R")
 source("dataAdding/PhUniverseReading.R", encoding = "UTF-8")
@@ -121,7 +135,7 @@ raw_data <- drop(raw_data, 'S_Molecule')
 names(raw_data)[names(raw_data) == c('通用名')] <- 'S_Molecule'
 
 
-poi = openxlsx::read.xlsx("y:/MAX/AZ/UPDATE/2001/poi.xlsx")[[1]]
+poi = openxlsx::read.xlsx(poi_path)[[1]]
 
 raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
                                      raw_data$标准商品名,
@@ -129,6 +143,8 @@ raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
 
 ##补数部分的数量需要用价格得出
 price <- cal_price(raw_data)
+
+price <- repartition(price, 2L)
 
 write.df(price, price_path, 'parquet', 'overwrite')
 
@@ -159,7 +175,7 @@ if(F){
 # 1.5 计算样本分子增长率:
 
 #
-if(T){
+if(F){
   #完整年
   gr_all_p1 <- cal_growth(raw_data %>% 
                          filter(!(raw_data$Year %in% year_missing)))
@@ -167,7 +183,7 @@ if(T){
   #gr_with_id_p1 <- gr_all_p1[[2]]
 }
 
-if(T){
+if(F){
   #不完整年
   gr_all_p2 <- cal_growth(raw_data %>% 
                          filter((raw_data$Year %in% 
@@ -175,6 +191,17 @@ if(T){
                                      year_missing+1))),
                          max_month)
   gr_p2 <- gr_all_p2[[1]]
+  #gr_with_id_p2 <- gr_all_p2[[2]]
+}
+
+if(T){
+  #完整年
+  gr_all <- cal_growth(raw_data)
+  gr <- gr_all[[1]]
+  
+  gr <- repartition(gr, 2L)
+  
+  write.parquet(gr, gr_path_online, mode = "overwrite")
   #gr_with_id_p2 <- gr_all_p2[[2]]
 }
 
@@ -198,6 +225,8 @@ if(F){
                gr$CITYGROUP == gr_p2$CITYGROUP,
              'left') %>% drop_dup_cols()
   print(nrow(gr))
+  
+  gr <- repartition(gr, 2L)
   
   write.parquet(gr, gr_path_online, mode = "overwrite")
   # gr_with_id <- distinct(rbind(gr_with_id_p1[,
@@ -249,7 +278,7 @@ seed <- trans_raw_data_for_adding(raw_data, gr)
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
 persist(seed, "MEMORY_ONLY")
-adding_results <- add_data(seed)
+adding_results <- add_data(seed, price_path)
 
 adding_data <- adding_results[[1]]
 original_range <- adding_results[[2]]
@@ -258,6 +287,7 @@ persist(original_range, "MEMORY_ONLY")
 # 1.8 合并补数部分和原始部分:
 raw_data_adding <- combind_data(raw_data, adding_data)
 raw_data_adding <- repartition(raw_data_adding, 2L)
+original_range <- repartition(original_range, 2L)
 
 
 ##好神奇，写出去再读进来，driver机就不会内存溢出了
@@ -294,7 +324,7 @@ if(F){
 
 # 1.11 输出补数结果:
 if(T){
-  
+  adding_data_new <- repartition(adding_data_new, 2L)
   write.parquet(adding_data_new, adding_data_new_path, mode = "overwrite")
   adding_data_new <- read.df(adding_data_new_path, "parquet")
   
@@ -350,50 +380,108 @@ panel_add_data <- panel_add_data %>%
 #处于model所用时间（模型数据），不补数；
 #晚于model所用时间（月更新数据），用unpublished和not arrived补数
 
-kct <- c('北京市',
-         '长春市',
-         '长沙市',
-         '常州市',
-         '成都市',
-         '重庆市',
-         '大连市',
-         '福厦泉市',
-         '广州市',
-         '贵阳市',
-         '杭州市',
-         '哈尔滨市',
-         '济南市',
-         '昆明市',
-         '兰州市',
-         '南昌市',
-         '南京市',
-         '南宁市',
-         '宁波市',
-         '珠三角市',
-         '青岛市',
-         '上海市',
-         '沈阳市',
-         '深圳市',
-         '石家庄市',
-         '苏州市',
-         '太原市',
-         '天津市',
-         '温州市',
-         '武汉市',
-         '乌鲁木齐市',
-         '无锡市',
-         '西安市',
-         '徐州市',
-         '郑州市',
-         '合肥市',
-         '呼和浩特市',
-         '福州市',
-         '厦门市',
-         '泉州市',
-         '珠海市',
-         '东莞市',
-         '佛山市',
-         '中山市')
+if(F) {
+  kct <- c(
+    '北京市',
+    '长春市',
+    '长沙市',
+    '常州市',
+    '成都市',
+    '重庆市',
+    '大连市',
+    '福厦泉市',
+    '广州市',
+    '贵阳市',
+    '杭州市',
+    '哈尔滨市',
+    '济南市',
+    '昆明市',
+    '兰州市',
+    '南昌市',
+    '南京市',
+    '南宁市',
+    '宁波市',
+    '珠三角市',
+    '青岛市',
+    '上海市',
+    '沈阳市',
+    '深圳市',
+    '石家庄市',
+    '苏州市',
+    '太原市',
+    '天津市',
+    '温州市',
+    '武汉市',
+    '乌鲁木齐市',
+    '无锡市',
+    '西安市',
+    '徐州市',
+    '郑州市',
+    '合肥市',
+    '呼和浩特市',
+    '福州市',
+    '厦门市',
+    '泉州市',
+    '珠海市',
+    '东莞市',
+    '佛山市',
+    '中山市'
+  )
+  panel_add_data <- filter(
+    panel_add_data,
+    !(
+      panel_add_data$City %in% c(
+        '北京市',
+        '上海市',
+        '天津市',
+        '重庆市',
+        '广州市',
+        '深圳市',
+        '西安市',
+        '大连市',
+        '成都市',
+        '厦门市',
+        '沈阳市'
+      )
+    ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
+      !(
+        !(panel_add_data$City %in% kct) &
+          panel_add_data$Molecule %in% c('奥希替尼')
+      )
+  )
+  not_arrived <-
+    dplyr::bind_rows(
+      openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
+      openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx")
+    )
+  
+  unpublished <-
+    openxlsx::read.xlsx(unpublished_path)
+  future_range <-
+    unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
+  
+  panel_add_data_his <- panel_add_data %>%
+    filter(panel_add_data$HOSP_ID %in% new_hospital &
+             panel_add_data$Date < 201901)
+  panel_add_data_fut <- panel_add_data %>%
+    filter(panel_add_data$Date > 201911)
+  
+  panel_add_data_fut <- panel_add_data_fut %>%
+    join(
+      future_range,
+      panel_add_data_fut$Date == future_range$Date &
+        panel_add_data_fut$ID == future_range$ID,
+      'inner'
+    ) %>%
+    drop_dup_cols()
+  
+  
+  
+  
+  panel_filtered <- rbind(panel_raw_data, panel_add_data_his) %>%
+    rbind(panel_add_data_fut)
+}
+
 panel_add_data <- filter(
   panel_add_data,!(
     panel_add_data$City %in% c(
@@ -409,39 +497,16 @@ panel_add_data <- filter(
       '厦门市',
       '沈阳市'
     )
-  ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
-    !(
-      !(panel_add_data$City %in% kct) &
-        panel_add_data$Molecule %in% c('奥希替尼')
-    )
+  ) & !(panel_add_data$Province %in% c('河北省', "福建省"))
 )
-
-not_arrived <- 
-  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
-            openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
-
-unpublished <- openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx")
-future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
 
 panel_add_data_his <- panel_add_data %>%
   filter(panel_add_data$HOSP_ID %in% new_hospital &
-      panel_add_data$Date < 201901
+           panel_add_data$Date < model_month_l
   )
-panel_add_data_fut <- panel_add_data %>% 
-  filter(panel_add_data$Date > 201911)
 
-panel_add_data_fut <- panel_add_data_fut %>% 
-  join(future_range, 
-       panel_add_data_fut$Date == future_range$Date &
-         panel_add_data_fut$ID == future_range$ID,
-       'inner') %>%
-  drop_dup_cols()
+panel_filtered <- rbind(panel_raw_data, panel_add_data_his)
 
-
-
-
-panel_filtered <- rbind(panel_raw_data, panel_add_data_his) %>%
-  rbind(panel_add_data_fut)
 
 head(agg(group_by(panel_filtered,'add_flag'), a= count(panel_filtered$add_flag)))
 head(agg(groupBy(
@@ -506,6 +571,9 @@ if(F){
   ))
   
 }
+
+
+panel_filtered <- repartition(panel_filtered, 2L)
 write.df(panel_filtered, panel_path, 
          "parquet", "overwrite")
 

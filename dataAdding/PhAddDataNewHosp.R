@@ -38,6 +38,9 @@ add_data_new_hosp <- function(raw_data_adding, original_range){
                 original_range[original_range$Year %in% max(years),'Month']
             )
         )
+    if(is.null(nrow(missing_months)) | nrow(missing_months) == 0){
+        return(list(raw_data_adding, new_hospital))
+    }
     
     number_of_existing_months <- 12 - nrow(missing_months)
     

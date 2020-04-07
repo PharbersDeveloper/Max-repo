@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-doi = u"AZ12"
+doi = u"AZ19"
 
 cities = [u"长春市", \
           u"长沙市", \
@@ -25,8 +25,6 @@ cities = [u"长春市", \
           u"乌鲁木齐市", \
           u"西安市", \
           u"郑州市", \
-          u"合肥市", \
-          u"呼和浩特市", \
           u"北京市", \
           u"福厦泉市", \
           u"广州市", \
@@ -37,25 +35,25 @@ cities = [u"长春市", \
 
 
 
-uni_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/universe_az_sanofi_onc"
+uni_path = u"/common/projects/max/AZ_Sanofi/universe_az_sanofi_base"
 #seg_city_path = u"hdfs://192.168.100.137/user/alfredyang/outlier/seg_city"
 #EIA_res_path = u"hdfs://192.168.100.137/user/alfredyang/outlier/EIA_res"
-pnl_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001"
-ims_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/ims_info/"+doi+"_ims_info_1901-1911"
-df_factor_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_factor_result"
-df_rlt_brf_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_rlt_brf"
-tmp_df_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_result"
-tmp_df_factor_result_path = u"hdfs://192.168.100.137:8020//common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_factor_result"
+pnl_path = u"/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_考虑价格"
+ims_path = u"/common/projects/max/AZ_Sanofi/ims_info/"+doi+"_ims_info_1901-1911"
+df_factor_result_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_factor_result"
+df_rlt_brf_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_rlt_brf"
+tmp_df_result_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_result"
+tmp_df_factor_result_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_factor_result"
 
-prd_input = [u"沐舒坦", u"阿思欣泰", u"富露施"]
+prd_input = [u"Others-Symbicort Cough", u"血脂康", u"脂必泰"]
 prod=dict([(prd_input[p],"prd"+str(p)) for p in range(len(prd_input))])
 sql_content = '''select `mkt_vol`,
-                     stack(3, '沐舒坦', `沐舒坦`, '阿思欣泰', `阿思欣泰`, '富露施', `富露施`) as (`poi`, `poi_vol` )
+                     stack(3, 'Others-Symbicort Cough', `Others-Symbicort Cough`, '血脂康', `血脂康`, '脂必泰', `脂必泰`) as (`poi`, `poi_vol` )
                      from  v_pivot             
                   '''
 
 sql_content2 = '''select `mkt_vol`, `scen_id`, `scen`, `city`, `num_ot`, `vol_ot`,
-                 stack(3, '沐舒坦', `沐舒坦`, '阿思欣泰', `阿思欣泰`, '富露施', `富露施`) as (`poi`, `poi_vol` )
+                 stack(3, 'Others-Symbicort Cough', `Others-Symbicort Cough`, '血脂康', `血脂康`, '脂必泰', `脂必泰`) as (`poi`, `poi_vol` )
                  from  v_pivot
               '''
 

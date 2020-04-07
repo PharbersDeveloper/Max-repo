@@ -10,10 +10,14 @@ c_month <- 1
 
 published_l <- openxlsx::read.xlsx(published_l_path)
 published_r <- openxlsx::read.xlsx(published_r_path)
-not_arrived <- 
-  dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
-                   openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
+if(F){
+  not_arrived <- 
+    dplyr::bind_rows(openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"),
+                     openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/1912/Not arrived201912.xlsx"))
+  
+}
 
+not_arrived <- openxlsx::read.xlsx(not_arrived_path)
 
 same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
   setdiff(not_arrived$ID[not_arrived$Date == c_year*100+c_month])
@@ -100,7 +104,7 @@ raw_data <- drop(raw_data, 'S_Molecule')
 names(raw_data)[names(raw_data) == c('通用名')] <- 'S_Molecule'
 
 
-poi = openxlsx::read.xlsx("y:/MAX/AZ/UPDATE/2001/poi.xlsx")[[1]]
+poi = openxlsx::read.xlsx(poi_path)[[1]]
 
 raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
                               raw_data$标准商品名,
@@ -132,7 +136,7 @@ seed <- trans_raw_data_for_adding(raw_data, gr)
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
 persist(seed, "MEMORY_ONLY")
-adding_results <- add_data(seed)
+adding_results <- add_data(seed, price_path)
 
 adding_data <- adding_results[[1]]
 
@@ -206,50 +210,74 @@ panel_add_data <- panel_add_data %>%
        'inner') %>%
   drop_dup_cols()
 
-kct <- c('北京市',
-         '长春市',
-         '长沙市',
-         '常州市',
-         '成都市',
-         '重庆市',
-         '大连市',
-         '福厦泉市',
-         '广州市',
-         '贵阳市',
-         '杭州市',
-         '哈尔滨市',
-         '济南市',
-         '昆明市',
-         '兰州市',
-         '南昌市',
-         '南京市',
-         '南宁市',
-         '宁波市',
-         '珠三角市',
-         '青岛市',
-         '上海市',
-         '沈阳市',
-         '深圳市',
-         '石家庄市',
-         '苏州市',
-         '太原市',
-         '天津市',
-         '温州市',
-         '武汉市',
-         '乌鲁木齐市',
-         '无锡市',
-         '西安市',
-         '徐州市',
-         '郑州市',
-         '合肥市',
-         '呼和浩特市',
-         '福州市',
-         '厦门市',
-         '泉州市',
-         '珠海市',
-         '东莞市',
-         '佛山市',
-         '中山市')
+if(F){
+  kct <- c('北京市',
+           '长春市',
+           '长沙市',
+           '常州市',
+           '成都市',
+           '重庆市',
+           '大连市',
+           '福厦泉市',
+           '广州市',
+           '贵阳市',
+           '杭州市',
+           '哈尔滨市',
+           '济南市',
+           '昆明市',
+           '兰州市',
+           '南昌市',
+           '南京市',
+           '南宁市',
+           '宁波市',
+           '珠三角市',
+           '青岛市',
+           '上海市',
+           '沈阳市',
+           '深圳市',
+           '石家庄市',
+           '苏州市',
+           '太原市',
+           '天津市',
+           '温州市',
+           '武汉市',
+           '乌鲁木齐市',
+           '无锡市',
+           '西安市',
+           '徐州市',
+           '郑州市',
+           '合肥市',
+           '呼和浩特市',
+           '福州市',
+           '厦门市',
+           '泉州市',
+           '珠海市',
+           '东莞市',
+           '佛山市',
+           '中山市')
+  panel_add_data <- filter(
+    panel_add_data,!(
+      panel_add_data$City %in% c(
+        '北京市',
+        '上海市',
+        '天津市',
+        '重庆市',
+        '广州市',
+        '深圳市',
+        '西安市',
+        '大连市',
+        '成都市',
+        '厦门市',
+        '沈阳市'
+      )
+    ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
+      !(
+        !(panel_add_data$City %in% kct) &
+          panel_add_data$Molecule %in% c('奥希替尼')
+      )
+  )
+}
+
 panel_add_data <- filter(
   panel_add_data,!(
     panel_add_data$City %in% c(
@@ -265,20 +293,15 @@ panel_add_data <- filter(
       '厦门市',
       '沈阳市'
     )
-  ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
-    !(
-      !(panel_add_data$City %in% kct) &
-        panel_add_data$Molecule %in% c('奥希替尼')
-    )
+  ) & !(panel_add_data$Province %in% c('河北省', "福建省"))
 )
 
-
-unpublished <- openxlsx::read.xlsx("y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx")
+unpublished <- openxlsx::read.xlsx(unpublished_path)
 future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
 
 
 panel_add_data_fut <- panel_add_data %>% 
-  filter(panel_add_data$Date > 201911)
+  filter(panel_add_data$Date > model_path_r)
 
 
 panel_add_data_fut <- panel_add_data_fut %>% 
@@ -393,10 +416,11 @@ if(F){
   write.df(panel_filtered, paste0("/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_",
                          c_year*100+c_month), 
            "parquet", "overwrite")
+  panel_filtered <- repartition(panel_filtered, 2L)
+  write.df(panel_filtered, panel_path, 
+           "parquet", "append")
 }
 
-write.df(panel_filtered, panel_path, 
-         "parquet", "append")
 # panel <-
 #     cal_max_data_panel(
 #         uni_path,

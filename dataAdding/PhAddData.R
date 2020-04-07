@@ -1,4 +1,4 @@
-add_data <- function(seed) {
+add_data <- function(seed, price_path) {
     # 1. 得到年
     original_range <- distinct(select(seed, "Year", "Month", "PHA"))
     ws <- windowOrderBy("Year")
