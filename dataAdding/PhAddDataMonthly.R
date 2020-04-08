@@ -301,7 +301,7 @@ future_range <- unique(rbind(not_arrived, unpublished)) %>% createDataFrame()
 
 
 panel_add_data_fut <- panel_add_data %>% 
-  filter(panel_add_data$Date > model_path_r)
+  filter(panel_add_data$Date > model_month_r)
 
 
 panel_add_data_fut <- panel_add_data_fut %>% 

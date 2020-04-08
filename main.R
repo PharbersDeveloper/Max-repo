@@ -119,6 +119,7 @@ need_cleaning <- distinct(select(raw_data %>%
                                    drop_dup_cols(),
                                  need_cleaning_cols
 ))
+print(nrow(need_cleaning))
 if(nrow(need_cleaning)>0){
   # need_cleaning_path = 
   #     paste0('Y:/MAX/Janssen/UPDATE/',c_month,'/待清洗',Sys.Date(),'.xlsx')
