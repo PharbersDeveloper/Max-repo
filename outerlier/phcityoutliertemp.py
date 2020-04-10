@@ -82,7 +82,7 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
         if len(cd_arr[ot_seg]) > smpl_max:
             # smpl=np.random.choice(cd_arr[ot_seg], smpl_max,p=DrugIncome_std, replace=False).tolist()
             # print ct
-            if ct in [u"珠三角市", u"福厦泉市"]:
+            if ct in [u"珠三角市", u"福厦泉市",u'金台嘉绍']:
                 # print u"珠福特殊条件"
                 df_tmp = df_EIA_res_iter.where(
                     (df_EIA_res_iter.HOSP_ID.isin(cd_arr[ot_seg])) &
@@ -141,9 +141,11 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
 
         if(index == 0):
             #df_result_all = df_result
+            df_result=df_result.repartition(2)
             df_result.write.format("parquet") \
                 .mode("overwrite").save(tmp_df_result_path)
         else:
+            df_result=df_result.repartition(2)
             df_result.write.format("parquet") \
                 .mode("append").save(tmp_df_result_path)
             #df_result_all = df_result_all.union(df_result)

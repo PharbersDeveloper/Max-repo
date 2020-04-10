@@ -16,8 +16,8 @@ def gen_poi_with_input(prds):
 def max_outlier_ims_shr_job(spark, df_ims_shr, prd_input):
     df_ims_shr = df_ims_shr.where(
         (df_ims_shr.city != "CHPA")
-        # & (df_ims_shr.city == "北京市")
-        # & (df_ims_shr.city == "宁波市")
+        & (df_ims_shr.city != 'KEY-54')
+        & (df_ims_shr.city != 'ROC-54')
         # & (df_ims_shr.city == "珠三角市")
     )
     df_cities = df_ims_shr.select("city").distinct().withColumn("key", func.lit(1))

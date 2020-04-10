@@ -8,13 +8,15 @@ def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
 
     ##此处注意
 
-    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 201912))
+    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 202000))
     if(doi == "SNY9"):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("SOLN"))
     if(doi == "AZ12"):
         df_EIA = df_EIA.where(~df_EIA.std_route.contains("OR"))
     if(doi == "AZ16"):
-        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Extended"))
+        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Extended") &
+                              ~df_EIA.Prod_Name.contains("布地奈德|AERO|64UG|120|台湾健乔信元医药生物股份有限公司") &
+                              ~df_EIA.Prod_Name.contains("雷诺考特"))
     if(doi == "AZ19"):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Cough"))
 

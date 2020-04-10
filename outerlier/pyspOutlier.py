@@ -116,7 +116,8 @@ print('Took %f second' % (end_time - start_time))
 # df_result = spark.read.parquet(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
 [df_factor_result, df_rlt_brf] = max_outlier_factor(spark, df_result, cities)
 #
-
+df_factor_result = df_factor_result.repartition(2)
+df_rlt_brf = df_rlt_brf.repartition(2)
 df_factor_result.write.format("parquet") \
     .mode("overwrite").save(df_factor_result_path)
 df_rlt_brf.write.format("parquet") \

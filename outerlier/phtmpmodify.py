@@ -8,6 +8,8 @@ def udf_city_modi(city):
         return u"福厦泉市"
     elif city in [u"珠海市",u"东莞市",u"中山市",u"佛山市"]:
         return u"珠三角市"
+    elif city in [u"金华市",u"台州市",u"嘉兴市",u"绍兴市"]:
+        return u"金台嘉绍"
     else:
         return city
 
