@@ -141,11 +141,11 @@ def max_outlier_city_loop_template(spark, df_EIA_res, df_seg_city, cities, num_o
 
         if(index == 0):
             #df_result_all = df_result
-            df_result=df_result.repartition(2)
+            df_result=df_result.repartition(1)
             df_result.write.format("parquet") \
                 .mode("overwrite").save(tmp_df_result_path)
         else:
-            df_result=df_result.repartition(2)
+            df_result=df_result.repartition(1)
             df_result.write.format("parquet") \
                 .mode("append").save(tmp_df_result_path)
             #df_result_all = df_result_all.union(df_result)

@@ -17,7 +17,7 @@ ss <- sparkR.session(
   appName = "Max Cal",
   enableHiveSupport = T,
   sparkConfig = list(
-    spark.driver.memory = "6g",
+    spark.driver.memory = "4g",
     spark.executor.memory = "6g",
     spark.executor.cores = "2",
     spark.cores.max = "4",
@@ -593,7 +593,7 @@ if(F){
   panel_c <- collect(panel_c)
   
   panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','2001',
-                             '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
+                             '/panel_hosp+ym_level_201701-202001_',Sys.Date(),'.csv')
   write.csv(panel_c, panel_path_local, row.names = F)
   
   

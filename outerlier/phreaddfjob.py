@@ -8,14 +8,22 @@ def max_outlier_read_df(spark, uni_path, pnl_path, ims_path):
 
     ##此处注意
 
-    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 202000))
+    df_EIA = df_EIA.where((df_EIA.DOI == doi) & (df_EIA.Date > 201900) & (df_EIA.Date < 201912))
     if(doi == "SNY9"):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("SOLN"))
+    if(doi == "AZ7"):
+        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("和爽") &
+                              ~df_EIA.Prod_Name.contains("恒康正清") &
+                              ~df_EIA.Prod_Name.contains("福静清") &
+                              ~df_EIA.Prod_Name.contains("思然") &
+                              ~df_EIA.Prod_Name.contains("北京圣永药业有限公司"))
     if(doi == "AZ12"):
         df_EIA = df_EIA.where(~df_EIA.std_route.contains("OR"))
+    if(doi == "AZ14"):
+        df_EIA = df_EIA.where(df_EIA.Prod_Name.contains("辅舒酮") |
+                              df_EIA.Prod_Name.contains("Others"))
     if(doi == "AZ16"):
-        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Extended") &
-                              ~df_EIA.Prod_Name.contains("布地奈德|AERO|64UG|120|台湾健乔信元医药生物股份有限公司") &
+        df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("布地奈德|AERO|64UG|120|台湾健乔信元医药生物股份有限公司") &
                               ~df_EIA.Prod_Name.contains("雷诺考特"))
     if(doi == "AZ19"):
         df_EIA = df_EIA.where(~df_EIA.Prod_Name.contains("Others-Symbicort Cough"))

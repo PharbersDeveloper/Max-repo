@@ -21,7 +21,7 @@ from phunijoineia import max_outlier_eia_join_uni
 spark = SparkSession.builder \
     .master("yarn") \
     .appName("sparkOutlier") \
-    .config("spark.driver.memory", "2g") \
+    .config("spark.driver.memory", "4g") \
     .config("spark.executor.cores", "1") \
     .config("spark.executor.instance", "2") \
     .config("spark.executor.memory", "2g") \
@@ -43,6 +43,7 @@ spark.sparkContext.addPyFile("phOutlierParameters.py")
 spark.sparkContext.addPyFile("phRename.py")
 
 print doi
+print cities
 
 '''
     工作目录: 1.panel  2.universe  3.IMS v.s. MAX 

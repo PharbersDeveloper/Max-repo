@@ -16,7 +16,7 @@ mkt_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 map_path = "/common/projects/max/AZ_Sanofi/az_sanofi清洗_ma"
 
 #月份文件夹
-c_month = "2001"
+#c_month = "2001"
 
 #不足12个月的年份
 year_missing = c(2019)
@@ -48,7 +48,7 @@ adding_data_new_path <- "/common/projects/max/AZ_Sanofi/adding_data_new"
 
 #panel路径
 panel_path <- 
-    '/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi_201701-202001_考虑价格'
+    '/common/projects/max/AZ_Sanofi/panel-result_AZ_Sanofi'
 # panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
 #                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 
@@ -90,7 +90,7 @@ model_month_r <- 201911
 
 poi_path <- "y:/MAX/AZ/UPDATE/2001/poi.xlsx"
 
-not_arrived_path <- "y:/MAX/Sanofi/UPDATE/2001/Not arrived202001.xlsx"
+
 
 
 unpublished_path <- "y:/MAX/Sanofi/UPDATE/2001/Unpublished2020.xlsx"

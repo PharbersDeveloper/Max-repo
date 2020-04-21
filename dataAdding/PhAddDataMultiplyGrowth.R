@@ -58,6 +58,8 @@ cal_seed_with_gr <- function(df, y, years,all_gr_index, price_path){
         drop_dup_cols()
     df$Units <- ifelse(df$Sales==0,0,df$Sales / df$Price)
     
+    df$Units <- ifelse(isNull(df$Units),0,df$Units)
+    
     #print(head(df))
     return(df)
     
