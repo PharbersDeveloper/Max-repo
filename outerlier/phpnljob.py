@@ -30,7 +30,7 @@ def max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city):
     df_pnl_mkt = df_pnl.groupBy("City").agg({"Sales": "sum"}) \
         .withColumnRenamed("sum(Sales)", "Sales_pnl_mkt")
 
-    df_pnl = df_pnl_tmp.join(df_pnl_mkt, on=["City"], how="left")
+    #df_pnl = df_pnl_tmp.join(df_pnl_mkt, on=["City"], how="left")
     # print df_pnl.count()
     # df_pnl.where(df_pnl.City == "上海市").show()
-    return df_pnl
+    return [df_pnl_tmp, df_pnl_mkt]

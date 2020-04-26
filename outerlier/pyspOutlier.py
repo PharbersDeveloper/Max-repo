@@ -63,7 +63,7 @@ df_EIA_res = max_outlier_eia_join_uni(spark, df_EIA_res, df_uni)
 # df_EIA_res.persist()
 # df_EIA_res.show()
 # 对Panel医院的数据整理， 用户factor的计算
-df_pnl = max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city)
+[df_pnl, df_pnl_mkt] = max_outlier_pnl_job(spark, df_EIA, df_uni, df_hos_city)
 # ims 个城市产品市场份额
 [df_ims_shr_res, df_cities] = max_outlier_ims_shr_job(spark, df_ims_shr, prd_input)
 # 城市处理逻辑
@@ -102,8 +102,15 @@ df_pnl = df_pnl.withColumnRenamed("City", "city") \
     .withColumnRenamed("Sales_pnl", "sales_pnl")
 # df_pnl.show()
 
+df_pnl_mkt = df_pnl_mkt.withColumnRenamed("City", "city") \
+    .withColumnRenamed("Sales_pnl_mkt", "sales_pnl_mkt")
+# df_pnl.show()
+
 df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
+    .join(df_pnl_mkt, on=["city"], how="left") \
     .join(df_ims_shr_res, on=["city", "poi"], how="left")
+# df_result = df_result.join(df_pnl, on=["city", "poi"], how="left") \
+#     .join(df_ims_shr_res, on=["city", "poi"], how="left")
 
 # df_result.write.format("parquet") \
 #         .mode("overwrite").save(u"hdfs://192.168.100.137/user/alfredyang/outlier/result")
