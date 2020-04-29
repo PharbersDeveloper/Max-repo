@@ -1,6 +1,6 @@
 
 library("BPRSparkCalCommon")
-cal_max_data_panel <- function(uni_path, mkt_path, c_month, add_data) {
+cal_max_data_panel <- function(uni_path, mkt_path, add_data) {
     uni <- read_universe(uni_path)
     
     uni <- distinct(select(uni, "PHA", "HOSP_NAME", 'Province', 'City'))
@@ -101,6 +101,7 @@ cal_max_data_panel <- function(uni_path, mkt_path, c_month, add_data) {
 }
 
 concat_multi_cols <- function(df, cols, new_col, sep) {
+    coltypes(df)[coltypes(df) == 'logical'] <- "character"
     df[['tmp']] <- ifelse(!isNull(df[[cols[1]]]),
                           df[[cols[1]]], lit('NA'))
     for (col in cols[-1]) {

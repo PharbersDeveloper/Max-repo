@@ -19,23 +19,30 @@ def max_outlier_factor_inner_loop_old(spark, rlt_scs, df_rlt, fst_prd, bias, ind
         mkt_ratio = {}
 
         for iprd in range(len(rltsc.index)):
-            poi_ratio[iprd] = np.divide(
-                (rltsc["poi_vol"][iprd] - rltsc["sales_pnl"][iprd]) * f + rltsc["sales_pnl"][iprd],
-                rltsc["ims_poi_vol"][iprd]) - 1
-            mkt_ratio[iprd] = np.divide(
-                (rltsc["mkt_vol"][iprd] - rltsc["sales_pnl_mkt"][iprd]) * f + rltsc["sales_pnl_mkt"][iprd],
-                rltsc["ims_mkt_vol"][iprd]) - 1
+            if rltsc["ims_poi_vol"][iprd]==0:
+                poi_ratio[iprd] = 0
+            else:
+                poi_ratio[iprd] = np.divide(
+                    (rltsc["poi_vol"][iprd] - rltsc["sales_pnl"][iprd]) * f + rltsc["sales_pnl"][iprd],
+                    rltsc["ims_poi_vol"][iprd]) - 1
+            if rltsc["ims_mkt_vol"][iprd]==0:
+                mkt_ratio[iprd] = 0
+            else:
+                mkt_ratio[iprd] = np.divide(
+                    (rltsc["mkt_vol"][iprd] - rltsc["sales_pnl_mkt"][iprd]) * f + rltsc["sales_pnl_mkt"][iprd],
+                    rltsc["ims_mkt_vol"][iprd]) - 1
+
 
         par = []
         for s in range(len(rltsc.index)):
             if rltsc["poi"][s] in prd_input[:fst_prd]:
                 par += ["np.divide(abs(poi_ratio[%s])," % s + str(bias) + ")"]
                 par += ["abs(mkt_ratio[%s])" % s]
-        exec ("obj=Minimize(max_elemwise(" + ",".join(par) + "))")
+        exec ("obj=Minimize(maximum(" + ",".join(par) + "))")
         # #        obj=Minimize(max_elemwise(abs(poi_ratio[0]),abs(poi_ratio[1]),abs(poi_ratio[2]),abs(poi_ratio[3]),
         #                                  abs(mkt_ratio[0]),abs(mkt_ratio[1]),abs(mkt_ratio[2]),abs(mkt_ratio[3])))
         prob = Problem(obj, [0 <= f])
-        prob.solve()
+        prob.solve(solver = cvxpy.ECOS)
         rltsc["factor"] = f.value
         for i in range(len(rltsc)):
             rltsc["scen"][i] = ",".join(rltsc["scen"][i])

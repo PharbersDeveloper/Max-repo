@@ -5,7 +5,7 @@
 ###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
-c_month <- 2
+c_month <- 1
 
 
 not_arrived_path <- paste0("y:/MAX/Sanofi/UPDATE/",
@@ -37,7 +37,7 @@ same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
 # printSchema(gr)
 
 #uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
-universe <- read_universe(uni_path)
+universe <- read_universe(uni_base_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
@@ -157,7 +157,7 @@ if(F){
 
 # 1.8 合并补数部分和原始部分:
 raw_data_adding <- combind_data(raw_data, adding_data)
-raw_data_adding <- repartition(raw_data_adding, 2L)
+#raw_data_adding <- repartition(raw_data_adding, 2L)
 
 
 
@@ -178,9 +178,8 @@ print(head(chk))
 
 panel <-
   cal_max_data_panel(
-    uni_path,
+    uni_base_path,
     mkt_path,
-    c_month = substr(c_year*100+c_month, 3, 6),
     add_data = adding_data_new
   )
 new_hospital <- openxlsx::read.xlsx(new_hospital_path, colNames=F)[[1]]

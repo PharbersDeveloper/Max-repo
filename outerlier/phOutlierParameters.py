@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-doi = u"AZ14"
+doi = u"AZ16"
 
 cities = [u"长春市", \
           u"长沙市", \
@@ -10,7 +10,7 @@ cities = [u"长春市", \
           u"大连市", \
           u"贵阳市", \
           u"杭州市", \
-          #u"哈尔滨市", \
+          u"哈尔滨市", \
           u"昆明市", \
           u"兰州市", \
           u"南昌市", \
@@ -47,15 +47,15 @@ df_rlt_brf_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"_df_rlt_brf"
 tmp_df_result_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_result"
 tmp_df_factor_result_path = u"/common/projects/max/AZ_Sanofi/outlier/"+doi+"tmp_df_factor_result"
 
-prd_input = [u"辅舒酮"]
+prd_input = [u"普米克令舒", u"Others-Pulmicort", u"益索"]
 prod=dict([(prd_input[p],"prd"+str(p)) for p in range(len(prd_input))])
 sql_content = '''select `mkt_vol`,
-                     stack(1, '辅舒酮', `辅舒酮`) as (`poi`, `poi_vol` )
+                     stack(3, '普米克令舒', `普米克令舒`, 'Others-Pulmicort', `Others-Pulmicort`, '益索', `益索`) as (`poi`, `poi_vol` )
                      from  v_pivot             
                   '''
 
 sql_content2 = '''select `mkt_vol`, `scen_id`, `scen`, `city`, `num_ot`, `vol_ot`,
-                 stack(1, '辅舒酮', `辅舒酮`) as (`poi`, `poi_vol` )
+                 stack(3, '普米克令舒', `普米克令舒`, 'Others-Pulmicort', `Others-Pulmicort`, '益索', `益索`) as (`poi`, `poi_vol` )
                  from  v_pivot
               '''
 

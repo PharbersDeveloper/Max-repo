@@ -64,7 +64,7 @@ source('dataAdding/PhCalPrice.R')
 # 1. 首次补数
 
 #uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
-universe <- read_universe(uni_path)
+universe <- read_universe(uni_base_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
 # 1.2 读取CPA与PHA的匹配关系:
@@ -103,6 +103,7 @@ raw_data <- mutate(
   raw_data,
   Brand = full_product
 )
+
 
 raw_data <- concat_multi_cols(raw_data, min_content,
                               'min1',
@@ -151,6 +152,7 @@ write.df(price, price_path, 'parquet', 'overwrite')
 
 
 if(F){
+  write.df(price, price_box_path, 'parquet', 'overwrite')
   raw_data <- filter(raw_data, raw_data$Year>2016 & raw_data$Year<2020)
 }
 
@@ -228,6 +230,7 @@ if(F){
   print(nrow(gr))
   
   gr <- repartition(gr, 2L)
+  
   
   write.parquet(gr, gr_path_online, mode = "overwrite")
   # gr_with_id <- distinct(rbind(gr_with_id_p1[,
@@ -347,9 +350,8 @@ print(head(chk))
 
 panel <-
   cal_max_data_panel(
-    uni_path,
+    uni_base_path,
     mkt_path,
-    c_month,
     add_data = adding_data_new
   )
 
@@ -592,7 +594,7 @@ if(F){
               Units = sum(panel_filtered$Units))
   panel_c <- collect(panel_c)
   
-  panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','2001',
+  panel_path_local <- paste0(project_path_local,'UPDATE/','2001',
                              '/panel_hosp+ym_level_201701-202001_',Sys.Date(),'.csv')
   write.csv(panel_c, panel_path_local, row.names = F)
   
