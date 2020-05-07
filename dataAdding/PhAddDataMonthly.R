@@ -5,7 +5,7 @@
 ###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
-c_month <- 1
+c_month <- 2
 
 
 not_arrived_path <- paste0("y:/MAX/Sanofi/UPDATE/",
@@ -80,10 +80,13 @@ raw_data <- mutate(
 )
 raw_data <- concat_multi_cols(raw_data, min_content,
                               'min1',
-                              sep = "|")
+                              sep = min1_sep)
 map <- read.df(map_path, "parquet")
 names(map)[names(map) %in% '标准通用名'] <- '通用名'
 names(map)[names(map) %in% '标准途径'] <- 'std_route'
+if(!('std_route' %in% names(map))){
+  map$std_route <- lit('')
+}
 map1 <- distinct(select(map, 'min1'))
 mp <- distinct(select(map, "min1", "min2", "通用名", 'std_route','标准商品名'))
 need_cleaning <- distinct(select(raw_data %>%

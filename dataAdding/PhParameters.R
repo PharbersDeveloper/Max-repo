@@ -1,13 +1,13 @@
 
 
-project_path <- "/common/projects/max/AZ_Sanofi/"
-project_path_local <- "Y:/MAX/AZ/"
+project_path <- "/common/projects/max/Sankyo/"
+project_path_local <- "Y:/MAX/Sankyo/"
 
 
 #原始数据
 raw_data_path <- 
     paste0(project_path,
-           "简单整合的az201701-201909_sanofi201801-201911原始数据_去重版_20200210")
+           "raw_data")
 
 others_box_path <- 
     paste0(project_path,"others_box")
@@ -15,39 +15,39 @@ others_box_path <-
 #"/common/projects/max/AZ_Sanofi/raw_data/简单整合的az201701-201909_sanofi201801-202001"
 #universe
 #uni_path <- "/common/projects/max/AZ_Sanofi/universe_az_sanofi_2spec"
-uni_base_path <- paste0(project_path,"universe_az_sanofi_base")
+uni_base_path <- paste0(project_path,"universe_base")
 
 #原始医院与pha匹配
-cpa_pha_mapping_path <- paste0(project_path,"医院匹配_20191031")
+cpa_pha_mapping_path <- paste0(project_path,"cpa_pha_mapping")
 
 #分子匹配模型
-mkt_path = paste0(project_path,"az_sanofi清洗_ma")
+mkt_path = paste0(project_path,"mkt_mapping")
 ##最小产品单位标准化
-map_path = paste0(project_path,"az_sanofi清洗_ma")
+map_path = paste0(project_path,"prod_mapping")
 
 #月份文件夹
 #c_month = "2001"
 
 #不足12个月的年份
-year_missing = c(2019)
+year_missing = c()
 
 #缺失年份的月份数
-max_month = 11
+max_month = 12
 
 #待清洗文件输出路径
-need_cleaning_path = 
-    paste0(project_path_local,'UPDATE/','1910','/待清洗',Sys.Date(),'.xlsx')
+# need_cleaning_path = 
+#     paste0(project_path_local,'UPDATE/','1910','/待清洗',Sys.Date(),'.xlsx')
 
 #连续性文件输出路径
-continuity_path = 
-    paste0(project_path_local,'UPDATE/','1910','/连续性',Sys.Date(),'.xlsx')
+# continuity_path = 
+#     paste0(project_path_local,'UPDATE/','1910','/连续性',Sys.Date(),'.xlsx')
 
 
 new_hospital_path <- paste0(project_path_local,'UPDATE/',
-                            '1910/2019new_hospital','.xlsx')
+                            '2001/2019new_hospital','.xlsx')
 
 #增长率路径
-gr_path = paste0(project_path_local,'UPDATE/','1910','/增长率',Sys.Date(),'.xlsx')
+gr_path = paste0(project_path_local,'UPDATE/','2001','/增长率',Sys.Date(),'.xlsx')
 gr_path_online = paste0(project_path,"gr")
 
 #第一阶段补数结果路径
@@ -59,9 +59,9 @@ adding_data_new_path <- paste0(project_path,"adding_data_new")
 
 #panel路径
 panel_path <- 
-    paste0(project_path,"panel-result_AZ_Sanofi")
+    paste0(project_path,"panel-result")
 panel_box_path <- 
-    paste0(project_path,"panel_box-result_AZ_Sanofi")
+    paste0(project_path,"panel_box-result")
 # panel_path_local <- paste0('Y:/MAX/AZ/UPDATE/','1912',
 #                            '/panel_hosp+ym_level_201701-201912_',Sys.Date(),'.csv')
 
@@ -99,7 +99,7 @@ raw_data_tmp_path <- paste0(project_path,"raw_data_tmp")
 
 
 model_month_l <- 201901
-model_month_r <- 201911
+model_month_r <- 201912
 
 
 poi_path <- paste0(project_path_local,'UPDATE/',"2001/poi.xlsx")
@@ -118,13 +118,13 @@ choose_uni <- function(mkt){
     }else if(mkt %in% c('SNY5', 'SNY9', 'AZ10' ,'AZ11', 'AZ15', 'AZ16', 'AZ14', 'AZ26', 'AZ24')){
         uni_path <- paste0(project_path,"universe_az_sanofi_mch")
     }else{
-        uni_path <- paste0(project_path,"universe_az_sanofi_base")
+        uni_path <- paste0(project_path,"universe_base")
     }
     return(uni_path)
 }
 
 choose_months <- function(mkt){
-    time_l <- 201701
+    time_l <- 201801
     time_r <- 202002
     if(mkt %in% c('SNY4', 'SNY5', 'SNY7', 'SNY9', 'SNY11', 'SNY14')){
         time_l <- 201801
@@ -139,30 +139,11 @@ choose_months <- function(mkt){
     return(list(time_l, time_r))
 }
 
-update_sanofi <- c('SNY1', 'SNY2', 'SNY3', 'SNY4', 'SNY5', 'SNY6', 'SNY7', 'SNY8', 
-                   'SNY9', 
-                   'SNY10', 'SNY11', 'SNY12', 'SNY13', 'SNY14', 'AZ1', 'AZ3', 'AZ5',
-                   'AZ6', 'AZ9', 'AZ11')
+all_models <- c('CV IV', 'LIX', 'LOX Tab', 'MVT', 'OLM')
 
-rest_models <- c('AZ2','AZ4','AZ7','AZ8','AZ10','AZ12','AZ13','AZ14','AZ15',
-                 'AZ16','AZ17','AZ18','AZ19','AZ20','AZ21','AZ22','AZ23','AZ24','AZ25','AZ26')
-
-
-all_models <- union(update_sanofi,rest_models)
+rest_models <- c()
 
 base_factor_path <- paste0(project_path,"factor/factor_", 'base')
 
+min1_sep <- ''
 
-other_models <- c('SNY2',
-                  'AZ7',
-                  'AZ16',
-                  'AZ21',
-                  'AZ25',
-                  'AZ23',
-                  'AZ24',
-                  'AZ22',
-                  'AZ20',
-                  'AZ26',
-                  'AZ19',
-                  'AZ3',
-                  'SNY1')

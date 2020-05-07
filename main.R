@@ -107,10 +107,13 @@ raw_data <- mutate(
 
 raw_data <- concat_multi_cols(raw_data, min_content,
                               'min1',
-                              sep = "|")
+                              sep = min1_sep)
 map <- read.df(map_path, "parquet")
 names(map)[names(map) %in% '标准通用名'] <- '通用名'
 names(map)[names(map) %in% '标准途径'] <- 'std_route'
+if(!('std_route' %in% names(map))){
+  map$std_route <- lit('')
+}
 map1 <- distinct(select(map, 'min1'))
 mp <- distinct(select(map, "min1", "min2", "通用名", 'std_route','标准商品名'))
 
@@ -150,6 +153,9 @@ price <- repartition(price, 2L)
 
 write.df(price, price_path, 'parquet', 'overwrite')
 
+
+
+raw_data <- filter(raw_data, raw_data$Year<((model_month_r%/%100)+1))
 
 if(F){
   write.df(price, price_box_path, 'parquet', 'overwrite')
@@ -316,8 +322,10 @@ adding_data_new_result <- add_data_new_hosp(raw_data_adding, original_range)
 adding_data_new <- adding_data_new_result[[1]]
 new_hospital <- adding_data_new_result[[2]]
 
+
+openxlsx::write.xlsx(new_hospital, new_hospital_path)
 if(F){
-  openxlsx::write.xlsx(new_hospital, new_hospital_path)
+  
   new_hospital <- openxlsx::read.xlsx(new_hospital_path, colNames=F)[[1]]
 }
 # persist(adding_data_new, "MEMORY_AND_DISK")
