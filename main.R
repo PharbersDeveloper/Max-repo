@@ -15,7 +15,7 @@ Sys.setenv(YARN_CONF_DIR = "D:/tools/hadoop-2.7.3/etc/hadoop")
 
 ss <- sparkR.session(
   appName = "Max Cal",
-  enableHiveSupport = T,
+  enableHiveSupport = F,
   sparkConfig = list(
     spark.driver.memory = "4g",
     spark.executor.memory = "6g",
