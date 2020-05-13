@@ -63,6 +63,8 @@ source('dataAdding/PhCalPrice.R')
 
 # 1. 首次补数
 
+others = F
+
 #uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
 universe <- read_universe(uni_base_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
@@ -80,7 +82,7 @@ if(T){
 
 
 # 1.3 读取原始样本数据:
-if(T){
+if(!others){
   raw_data <- read_raw_data(
     raw_data_path,
     cpa_pha_mapping
@@ -90,6 +92,11 @@ if(T){
   #   cpa_pha_mapping
   # )
   persist(raw_data, "MEMORY_ONLY")
+}else{
+  raw_data <- read_raw_data(
+    others_box_path,
+    cpa_pha_mapping
+  )
 }
 
 raw_data <- join(raw_data, id_city,
@@ -151,7 +158,13 @@ price <- cal_price(raw_data)
 
 price <- repartition(price, 2L)
 
-write.df(price, price_path, 'parquet', 'overwrite')
+
+if(!others){
+  write.df(price, price_path, 'parquet', 'overwrite')
+}else{
+  write.df(price, price_box_path, 'parquet', 'overwrite')
+}
+
 
 
 
@@ -203,7 +216,7 @@ if(F){
   #gr_with_id_p2 <- gr_all_p2[[2]]
 }
 
-if(T){
+if(!others){
   #完整年
   gr_all <- cal_growth(raw_data)
   gr <- gr_all[[1]]
@@ -212,6 +225,8 @@ if(T){
   
   write.parquet(gr, gr_path_online, mode = "overwrite")
   #gr_with_id_p2 <- gr_all_p2[[2]]
+}else{
+  gr <- read.df(gr_path_online)
 }
 
 
@@ -288,7 +303,12 @@ seed <- trans_raw_data_for_adding(raw_data, gr)
 # 1.7 补充各个医院缺失的月份:
 print("start adding data by alfred yang")
 persist(seed, "MEMORY_ONLY")
-adding_results <- add_data(seed, price_path)
+if(!others){
+  adding_results <- add_data(seed, price_path)
+}else{
+  adding_results <- add_data(seed, price_box_path)
+}
+
 
 adding_data <- adding_results[[1]]
 original_range <- adding_results[[2]]

@@ -2,9 +2,16 @@
 
 remove_nega <- function(df, sales_unit){
     
-    for(i in sales_unit){
-        df <- filter(df, df[[i]]>0)
+    df <- mutate(df, positive = ifelse(df[[1]]>0, 1, 0))
+    
+    for(i in sales_unit[-1]){
+        df <- mutate(df, positive = ifelse(df[[i]]>0, 1, positive))
     }
+    
+    df <- filter(df, df$positive == 1)
+    
+    df <- df %>%
+        drop('positive')
     
     return(df)
 }
