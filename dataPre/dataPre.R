@@ -3,13 +3,19 @@ require(data.table)
 
 cal_excel_data_to_parquet <- function(path, tab = 1, dest, start_row = 1) {
     map <- read_excel(path, sheet = tab, skip = start_row - 1,
-                      .name_repair = "universal")
+                      .name_repair = "universal", trim_ws = F)
     mapDf <- createDataFrame(map)
     write.parquet(mapDf, dest)
 }
 
 cal_csv_to_parquet <- function(path, dest) {
     map <- fread(path, stringsAsFactors = F)
+    map <- lapply(map,function(x){
+        if(class(x)=='character'){
+            x <- iconv(x,to='UTF-8')
+        }
+        return(x)
+    }) %>% dplyr::bind_rows()
     mapDf <- createDataFrame(map)
     write.parquet(mapDf, dest)
 }
@@ -53,5 +59,11 @@ cal_excel_large_data_to_parquet <- function(path, tab, dest, step = 10000L,
 
 cal_csv_large_data_to_parquet <- function(path, dest, step = 10000L, if_append = 0) {
     map <- fread(path, stringsAsFactors = F)
+    map <- lapply(map,function(x){
+        if(class(x)=='character'){
+            x <- iconv(x,to='UTF-8')
+        }
+        return(x)
+    }) %>% dplyr::bind_rows()
     cal_large_data_frame_2_spark(map, dest, step, if_append)
 }

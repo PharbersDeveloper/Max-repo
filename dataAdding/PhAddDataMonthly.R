@@ -5,7 +5,9 @@
 ###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
-c_month <- 2
+c_month <- 3
+
+others <- F
 
 
 not_arrived_path <- paste0("y:/MAX/Sanofi/UPDATE/",
@@ -24,19 +26,7 @@ if(F){
 
 not_arrived <- openxlsx::read.xlsx(not_arrived_path)
 
-same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
-  setdiff(not_arrived$ID[not_arrived$Date == c_year*100+c_month])
 
-
-# gr <- read.df(gr_path_online,
-#               "parquet")
-# 
-# ##
-# gr$GR1920 = gr$GR1819
-
-# printSchema(gr)
-
-#uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
 universe <- read_universe(uni_base_path)
 id_city <- distinct(universe[, c("PHA", "City", "City_Tier_2010")])
 
@@ -53,7 +43,7 @@ if(T){
 
 
 # 1.3 读取原始样本数据:
-if(T){
+if(!others){
   raw_data <- read_raw_data(
     raw_data_path,
     cpa_pha_mapping
@@ -62,9 +52,13 @@ if(T){
   #   "hdfs://192.168.100.137:8020//common/projects/max/Janssen/Hospital_Data_for_Zytiga_Market_201801-201907",
   #   cpa_pha_mapping
   # )
-  #persist(raw_data, "MEMORY_ONLY")
+  persist(raw_data, "MEMORY_ONLY")
+}else{
+  raw_data <- read_raw_data(
+    others_box_path,
+    cpa_pha_mapping
+  )
 }
-
 
 raw_data <- join(raw_data, id_city,
                  raw_data$PHA == id_city$PHA, 'left') %>%
@@ -115,47 +109,81 @@ names(raw_data)[names(raw_data) == c('通用名')] <- 'S_Molecule'
 poi = openxlsx::read.xlsx(poi_path)[[1]]
 
 raw_data$S_Molecule_for_gr <- ifelse(raw_data$标准商品名 %in% poi,
-                              raw_data$标准商品名,
-                              raw_data$S_Molecule)
+                                     raw_data$标准商品名,
+                                     raw_data$S_Molecule)
+
+
+##补数部分的数量需要用价格得出
+price <- cal_price(raw_data)
+
+price <- repartition(price, 2L)
+
+
+if(!others){
+  write.df(price, price_path, 'parquet', 'overwrite')
+}else{
+  write.df(price, price_box_path, 'parquet', 'overwrite')
+}
 
 
 if(F){
   raw_data <- filter(raw_data, raw_data$Year>2016)
 }
 
-raw_data <- raw_data %>% filter(raw_data$Month == c_month)
 
 
-
-if(F){
+for(m in 1:c_month){
+  print(m)
+  same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
+    setdiff(not_arrived$ID[not_arrived$Date == c_year*100+m])
   
-  write.parquet(raw_data, raw_data_tmp_path, mode = "overwrite")
-  raw_data <- read.df(raw_data_tmp_path, "parquet")
+  raw_data_m <- raw_data %>% filter(raw_data$Month == m)
+  
+  
+  
+  gr_all <- cal_growth(raw_data_m %>% 
+                         filter((raw_data_m$ID %in% same_hosp)))
+  gr <- gr_all[[1]]
+  # 1.6 原始数据格式整理:
+  seed <- trans_raw_data_for_adding(raw_data_m, gr)
+  
+  # 1.7 补充各个医院缺失的月份:
+  print("start adding data by alfred yang")
+  #persist(seed, "MEMORY_ONLY")
+  
+  
+  if(!others){
+    adding_results <- add_data(seed, price_path)
+  }else{
+    adding_results <- add_data(seed, price_box_path)
+  }
+  
+  if(m == 1){
+    adding_data <- adding_results[[1]]
+  }else{
+    adding_data <- rbind(adding_data, adding_results[[1]])
+  }
+  
   
   
 }
 
-gr_all <- cal_growth(raw_data %>% 
-                          filter((raw_data$ID %in% same_hosp)))
-gr <- gr_all[[1]]
-# 1.6 原始数据格式整理:
-seed <- trans_raw_data_for_adding(raw_data, gr)
-
-# 1.7 补充各个医院缺失的月份:
-print("start adding data by alfred yang")
-#persist(seed, "MEMORY_ONLY")
-adding_results <- add_data(seed, price_path)
-
-adding_data <- adding_results[[1]]
 
 
-if(F){
-  
-  write.parquet(adding_data, adding_data_path, mode = "overwrite")
-  adding_data <- read.df(adding_data_path, "parquet")
-  
-  
-}
+
+# gr <- read.df(gr_path_online,
+#               "parquet")
+# 
+# ##
+# gr$GR1920 = gr$GR1819
+
+# printSchema(gr)
+
+#uni_path <- "hdfs://192.168.100.137:8020//common/projects/max/Janssen/universe_sustenna"
+
+
+
+
 
 
 # 1.8 合并补数部分和原始部分:
@@ -167,6 +195,11 @@ raw_data_adding <- combind_data(raw_data, adding_data)
 
 adding_data_new <- raw_data_adding %>%
     filter(raw_data_adding$Year == c_year)
+if(F){
+  adding_data_new <- raw_data_adding %>%
+    filter(raw_data_adding$Year == c_year &
+             raw_data_adding$Month == c_month)
+}
 
 chk <- agg(groupBy(
     adding_data_new,
