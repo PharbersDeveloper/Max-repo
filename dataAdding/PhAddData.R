@@ -77,9 +77,15 @@ cal_time_range <- function(original_range, y) {
     other_years_range <- other_years_range %>%
         cal_time_diff(y)
     
-    seed_range <- other_years_range %>%
-        arrange(other_years_range$weight) %>%
-        group_by('PHA', 'Month') %>%
-        agg(Year = SparkR::first(other_years_range$Year))
+    # seed_range <- other_years_range %>%
+    #     arrange(other_years_range$weight) %>%
+    #     group_by('PHA', 'Month') %>%
+    #     agg(Year = SparkR::first(other_years_range$Year))
+    ##上面那段注释的代码会随机取first，很迷惑。
+    seed_range <- other_years_range %>% repartition(1L) %>%
+        arrange(asc(other_years_range$weight))
+    seed_range <- group_by(seed_range, 'PHA', 'Month') %>%
+        agg(Year = first(seed_range$Year))
+    
     return(seed_range)
 }
