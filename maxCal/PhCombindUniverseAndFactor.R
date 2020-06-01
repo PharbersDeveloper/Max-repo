@@ -17,6 +17,10 @@ get_uni_with_factor <- function(factor_path, universe){
         join(factor, universe$City == factor$City, 'left') %>%
         drop_dup_cols()
     
+    universe$factor <- ifelse(isNull(universe$factor),
+                              lit(1),
+                              universe$factor)
+    
     
     universe <- universe %>%
         filter(universe$PANEL == 0) %>% 

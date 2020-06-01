@@ -474,7 +474,7 @@ if(F) {
         '厦门市',
         '沈阳市'
       )
-    ) & !(panel_add_data$Province %in% c('河北省', "福建省")) &
+    ) & !(panel_add_data$Province %in% c('河北省', "福建省",'河北', "福建")) &
       !(
         !(panel_add_data$City %in% kct) &
           panel_add_data$Molecule %in% c('奥希替尼')
@@ -528,7 +528,7 @@ panel_add_data <- filter(
       '厦门市',
       '沈阳市'
     )
-  ) & !(panel_add_data$Province %in% c('河北省', "福建省"))
+  ) & !(panel_add_data$Province %in% c('河北省', "福建省",'河北', "福建"))
 )
 
 panel_add_data_his <- panel_add_data %>%
