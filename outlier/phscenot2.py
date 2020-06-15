@@ -36,17 +36,20 @@ def max_outlier_seg_scen_ot_spark_2(spark, df_EIA_res_cur,
 
     #prd_input = ["加罗宁", "凯纷", "诺扬"]
 
-    schema = StructType([
-        StructField("scen", ArrayType(StringType()), True),
-    ])
+    # schema = StructType([
+    #     StructField("scen", ArrayType(StringType()), True),
+    # ])
     arr = np.array(scen[ot_seg])
     df = pd.DataFrame(data=arr.flatten())
     df.columns = ["scen"]
-    df_scen_ot_seg = spark.createDataFrame(df, schema)
+    df["scen_id"] = range(0, len(df))
+    df_scen_ot_seg = spark.createDataFrame(df)
+
+    df_scen_ot_seg = df_scen_ot_seg.withColumn("num_ot", func.size("scen"))
 
     # 有问题,后期修改
-    df_scen_ot_seg = df_scen_ot_seg.repartition(1).withColumn("scen_id", func.monotonically_increasing_id()) \
-        .withColumn("num_ot", func.size("scen"))
+    # df_scen_ot_seg = df_scen_ot_seg.repartition(1).withColumn("scen_id", func.monotonically_increasing_id()) \
+    #     .withColumn("num_ot", func.size("scen"))
 
 
     df_EIA_res_cur = df_EIA_res_cur.withColumn("scen_id_lst", rep_EIA())
