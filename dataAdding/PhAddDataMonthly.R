@@ -5,7 +5,8 @@
 ###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
-c_month <- 2
+first_adding_month <- 1
+c_month <- 4
 
 others <- F
 
@@ -131,8 +132,8 @@ if(F){
 }
 
 
-
-for(m in 1:c_month){
+index <- 1
+for(m in first_adding_month:c_month){
   print(m)
   same_hosp <- intersect(published_l[[1]], published_r[[1]]) %>%
     setdiff(not_arrived$ID[not_arrived$Date == c_year*100+m])
@@ -158,8 +159,9 @@ for(m in 1:c_month){
     adding_results <- add_data(seed, price_box_path)
   }
   
-  if(m == 1){
+  if(index == 1){
     adding_data <- adding_results[[1]]
+    index <- index + 1
   }else{
     adding_data <- rbind(adding_data, adding_results[[1]])
   }
