@@ -5,7 +5,7 @@
 ###但是要多读取两年的出版名单，在同样医院范围计算。
 
 c_year <- 2020
-first_adding_month <- 1
+first_adding_month <- 4
 c_month <- 4
 
 others <- F
@@ -193,14 +193,15 @@ raw_data_adding <- combind_data(raw_data, adding_data)
 #raw_data_adding <- repartition(raw_data_adding, 2L)
 
 
-
-
 adding_data_new <- raw_data_adding %>%
-    filter(raw_data_adding$Year == c_year)
+  filter(raw_data_adding$Year == c_year &
+           raw_data_adding$Month <= c_month &
+           raw_data_adding$Month >= first_adding_month)
+
+
 if(F){
   adding_data_new <- raw_data_adding %>%
-    filter(raw_data_adding$Year == c_year &
-             raw_data_adding$Month == c_month)
+    filter(raw_data_adding$Year == c_year)
 }
 
 chk <- agg(groupBy(
